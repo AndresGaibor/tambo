@@ -18,6 +18,12 @@ INK_DIM = "#4A5164"
 # Colores de grupo (tema oscuro)
 C = {"gold": "#F5B83D", "teal": "#2DD4BF", "indigo": "#818CF8"}
 
+# Colores de marca de la tecnologia de cada app, cuando existe.
+REACT = "#61DAFB"
+CLERK = "#6C47FF"
+POSTGRES = "#699ECA"
+STORYBOOK = "#FF4785"
+
 SURFACE_TOP = "#161A23"
 SURFACE_BOT = "#0F1218"
 
@@ -88,7 +94,7 @@ def spark(x, y, r=7, color=GOLD, opacity=0.9, width=2.5):
 # ---------- Escenas (720x240; suelo en y=194) ----------
 
 def escena_erp():
-    add(g(C["gold"]))
+    add(g(REACT))
     # Terminal POS
     rrect(300, 58, 150, 100, 14)
     rrect(314, 72, 122, 44, 8)
@@ -111,10 +117,17 @@ def escena_erp():
     for i, (cx, cy) in enumerate([(560, 186), (560, 174), (560, 162)]):
         add(f'<ellipse cx="{cx}" cy="{cy}" rx="24" ry="8"/>')
     add(g_close())
+    # Atomo de React: nucleo y tres orbitos
+    add(f'<g fill="none" stroke="{REACT}" stroke-width="2.2" stroke-opacity="0.9">'
+        f'<ellipse cx="228" cy="120" rx="34" ry="13"/>'
+        f'<ellipse cx="228" cy="120" rx="34" ry="13" transform="rotate(60 228 120)"/>'
+        f'<ellipse cx="228" cy="120" rx="34" ry="13" transform="rotate(120 228 120)"/>'
+        f'</g>')
+    add(f'<circle cx="228" cy="120" r="6" fill="{REACT}"/>')
 
 
 def escena_admin():
-    add(g(C["gold"]))
+    add(g(CLERK))
     # Escudo central
     path("M 340 66 L 400 84 L 400 128 Q 400 166 340 188 Q 280 166 280 128 L 280 84 Z")
     path("M 340 78 L 388 92 L 388 126 Q 388 156 340 176 Q 292 156 292 126 L 292 92 Z",
@@ -137,30 +150,30 @@ def escena_admin():
 
 
 def escena_api():
-    add(g(C["gold"]))
-    # Núcleo con </> 
-    rrect(330, 76, 140, 88, 14)
-    path("M 386 100 L 370 120 L 386 140")
-    path("M 414 100 L 430 120 L 414 140")
-    line(404, 96, 396, 144)
-    add(f'<rect x="330" y="76" width="140" height="88" rx="14" fill="{C["gold"]}" fill-opacity="0.07"/>')
-    # Conectores entrantes y salientes
-    line(238, 120, 296, 120)
-    circle(238, 120, 8)
-    line(296, 120, 330, 120)
-    line(470, 120, 528, 120)
-    circle(540, 120, 8)
-    path("M 500 120 Q 514 120 514 106")
+    add(g(POSTGRES))
+    # Base de datos: cilindros apilados
+    for y in (88, 118, 148):
+        add(f'<path d="M 330 {y} Q 330 {y+14} 360 {y+14} L 470 {y+14} '
+            f'Q 500 {y+14} 500 {y}"/>')
+        add(f'<path d="M 330 {y} Q 330 {y-14} 360 {y-14} L 470 {y-14} '
+            f'Q 500 {y-14} 500 {y}"/>')
+    add(f'<ellipse cx="400" cy="74" rx="85" ry="14" fill="{POSTGRES}" fill-opacity="0.12"/>')
+    # Consulta entrante y filas salientes
+    line(244, 118, 296, 118)
+    circle(244, 118, 8)
+    path("M 296 118 L 316 118 Q 326 118 326 108")
+    line(500, 118, 552, 118)
+    circle(564, 118, 8)
     # Paquetes
-    rrect(214, 96, 24, 24, 6)
-    rrect(196, 132, 18, 18, 5)
-    rrect(566, 96, 22, 22, 6)
-    rrect(590, 128, 16, 16, 5)
+    rrect(216, 92, 24, 24, 6)
+    rrect(198, 130, 18, 18, 5)
+    rrect(588, 96, 22, 22, 6)
+    rrect(612, 128, 16, 16, 5)
     add(g_close())
 
 
 def escena_storybook():
-    add(g("#FF4785"))
+    add(g(STORYBOOK))
     # Libro oficial estilizado
     path("M 342 64 Q 336 60 328 62 L 296 70 L 296 178 L 328 170 Q 336 168 342 172 "
          "Q 348 168 356 170 L 388 178 L 388 70 L 356 62 Q 348 60 342 64 Z")
@@ -343,8 +356,8 @@ SCENES = {
 }
 
 COLORS = {
-    "erp": C["gold"], "admin": C["gold"], "api": C["gold"],
-    "storybook": C["gold"], "assistant": C["gold"],
+    "erp": REACT, "admin": CLERK, "api": POSTGRES,
+    "storybook": STORYBOOK, "assistant": C["gold"],
     "delegation": C["teal"], "titula": C["teal"],
     "billing": C["indigo"], "presentation": C["indigo"],
     "api-docs": C["indigo"], "openapi": C["indigo"],
@@ -367,7 +380,7 @@ def render(name):
     body_start = len(S)
     SCENES[name]()
     # Acento inti: una chispa dorada por composición, salvo en gold (ahí es teal)
-    accent = C["teal"] if color == C["gold"] else GOLD
+    accent = GOLD if color != GOLD else C["teal"]
     S.insert(body_start, f'<g fill="none" stroke="{color}" stroke-width="3" '
                          f'stroke-linecap="round" stroke-linejoin="round">')
     S.append("</g>")
