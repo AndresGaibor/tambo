@@ -5,7 +5,24 @@ agrupadas por proyecto, estado en vivo, buscador y portadas visuales, instalable
 como PWA. Corre como servidor de desarrollo de Vite+ con un plugin propio; las
 apps siguen corriendo donde ya corrían y Caddy les da nombres limpios.
 
-## Puesta en marcha
+## Acceso desde el Mac (interino, sin DNS propio)
+
+Mientras no existan los registros DNS ni el Caddy definitivo, el portal está
+expuesto con Tailscale Serve, como el resto de las apps de la VM:
+
+- URL: `https://oracle.tail4a8b59.ts.net:15171/` (solo dentro de la tailnet).
+- Servicio: `tambo-dev.service` (systemd de usuario, siempre encendido; es la
+  puerta de las demás apps y sondea salud cada 30 s, no escala a cero).
+- El host interino vive en `TAMBO_ALLOWED_HOSTS` (`vite.config.ts`).
+
+Para desmontarlo cuando llegue el Caddy:
+
+```bash
+sudo tailscale serve --https=15171 off
+systemctl --user disable --now tambo-dev
+```
+
+## Puesta en marcha definitiva
 
 ```bash
 cp .env.example .env    # y cargar DNS_API_TOKEN de Cloudflare

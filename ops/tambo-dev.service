@@ -1,0 +1,21 @@
+[Unit]
+Description=Tambo portal (Vite+ dev server en loopback, expuesto con Tailscale Serve)
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/ubuntu/code/javascript/tambo/app
+Environment=TAMBO_DATA_DIR=/home/ubuntu/code/javascript/tambo/data
+Environment=TAMBO_PORT=15170
+Environment=PATH=/home/ubuntu/.local/share/fnm/aliases/default/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ubuntu/.local/share/fnm/aliases/default/bin/node node_modules/vite-plus/bin/vp dev
+Restart=always
+RestartSec=3
+# Sin SIGTERM aceptado la parada queda en failed (patrón de la VM).
+SuccessExitStatus=143
+KillMode=control-group
+# Siempre encendido: es la puerta de las demás apps, sondea salud cada 30 s
+# y mantiene conexiones HMR; no escala a cero con Sablier.
+
+[Install]
+WantedBy=default.target

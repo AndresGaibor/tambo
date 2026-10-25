@@ -7,6 +7,13 @@ const port = Number(process.env.TAMBO_PORT ?? 15170);
 const hmrClientPort = process.env.TAMBO_HMR_CLIENT_PORT
   ? Number(process.env.TAMBO_HMR_CLIENT_PORT)
   : undefined;
+// El host del portal y, mientras no haya DNS propio, el de Tailscale Serve.
+const allowedHosts = (
+  process.env.TAMBO_ALLOWED_HOSTS ?? "tambo.lab.andresgaibor.com,oracle.tail4a8b59.ts.net"
+)
+  .split(",")
+  .map((host) => host.trim())
+  .filter(Boolean);
 
 export default defineConfig({
   plugins: [react(), tamboPlugin()],
@@ -14,7 +21,7 @@ export default defineConfig({
     host: "127.0.0.1",
     port,
     strictPort: true,
-    allowedHosts: ["tambo.lab.andresgaibor.com"],
+    allowedHosts,
     hmr: hmrClientPort ? { clientPort: hmrClientPort } : undefined,
   },
   cacheDir: "/tmp/vite-tambo",
