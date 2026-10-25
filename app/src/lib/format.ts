@@ -33,7 +33,8 @@ function since(entry: HealthEntry, now: number): number {
 export function statusWord(entry: HealthEntry | undefined): string {
   if (!entry || entry.status === "unknown") return "Sin comprobar";
   if (entry.status === "down") return "Sin respuesta";
-  return "Activa";
+  // El amarillo comunica lentitud: el texto lo dice, nunca solo el color.
+  return entry.ms !== undefined && entry.ms >= 1_000 ? "Lenta" : "Activa";
 }
 
 /** Texto de estado para tooltip y atributo accesible. */

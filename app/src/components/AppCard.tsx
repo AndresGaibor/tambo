@@ -4,7 +4,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Info, MoreHorizontal, Power } from "lucide-react";
 import type { AppEntry, Group, GroupColor } from "../schema";
 import { useStore, type ViewMode } from "../store";
-import { envOf, statusText, statusVar, statusWord } from "../lib/format";
+import { envOf, statusVar, statusWord } from "../lib/format";
 import { Cover } from "./Cover";
 import { AppIdentity } from "./AppIdentity";
 
@@ -170,13 +170,6 @@ export function AppCard({
         <a {...linkProps}>
           <span className="card-cover">
             <Cover app={app} color={color} />
-            <span
-              className="dot card-dot"
-              role="img"
-              aria-label={statusText(health)}
-              title={statusText(health)}
-              style={{ "--status": statusVar(health) } as CSSProperties}
-            />
           </span>
           <span className="card-body">
             <span className="card-name">{app.name}</span>

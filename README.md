@@ -70,8 +70,13 @@ pnpm icons      # regenera los PNG de la PWA (sharp)
   interruptor de atajos `e`/`t`/`1-9` (`tambo.shortcuts`). Toda lectura y
   escritura de almacenamiento lleva manejo de errores: si falla, la sesión
   usa los valores por omisión.
-- **Identidad de una app** (igual en anclados y tarjetas): primero el recurso
-  propio (`cover` svg/image), luego el icono configurado (`icon`:
+- **Identidad de una app** (igual en anclados y tarjetas): el icono es
+  independiente de la portada. Icono: `brand:<archivo>.svg` (logo oficial
+  con su color propio, p. ej. el coral de Storybook),
+  `tambo:<glifo>` del sprite incluido, `lucide:<nombre>` o emoji.
+  Portada (jerarquía): captura real (`shot`) → recurso propio
+  (`svg`/`image` en `data/assets/`) → ilustración funcional del kit
+  (`data/assets/covers/`) → respaldo simple. No se descargan favicons.
   `tambo:<glifo>` del sprite incluido en `app/src/assets/apps-sprite.svg`,
   `lucide:<nombre>` o un emoji), y como respaldo la inicial. El icono y la
   portada son propiedades independientes; una portada nunca resuelve el

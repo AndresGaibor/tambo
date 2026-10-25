@@ -33,16 +33,16 @@ await setTheme("light");
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${prefix}-light-1440.png` });
 
-// ===== Vista portadas =====
+// ===== Vista portadas (menú Vista -> Portadas) =====
 await setTheme("dark");
-await page.evaluate(() => {
-  const btn = [...document.querySelectorAll("button")].find((b) =>
-    b.getAttribute("aria-label")?.startsWith("Vista: Compacta"),
-  );
-  btn?.click();
-});
-await page.waitForTimeout(400);
+await page.getByRole("button", { name: /Vista:/ }).click();
+await page.getByRole("menuitemradio", { name: "Portadas" }).click();
+await page.waitForTimeout(600);
 await page.screenshot({ path: `${prefix}-covers-dark-1440.png` });
+// Volver a compacta para el resto de la sesión
+await page.getByRole("button", { name: /Vista:/ }).click();
+await page.getByRole("menuitemradio", { name: "Compacta" }).click();
+await page.waitForTimeout(400);
 
 // ===== Búsqueda con resultados y sin ellos =====
 await page.fill("[data-search-input]", "erp");

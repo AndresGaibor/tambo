@@ -22,13 +22,14 @@
           ],
           "pinned": false,
           "cover": {
-            "kind": "shot"
+            "kind": "svg",
+            "src": "covers/storybook.svg"
           },
           "health": {
             "url": "http://127.0.0.1:6006"
           },
           "service": "elcaliz-storybook.service",
-          "icon": "tambo:storybook"
+          "icon": "brand:storybook.svg"
         },
         {
           "id": "elcaliz-admin",
@@ -40,8 +41,8 @@
           ],
           "pinned": false,
           "cover": {
-            "kind": "emoji",
-            "value": "🛠️"
+            "kind": "svg",
+            "src": "covers/admin.svg"
           },
           "health": {
             "url": "http://127.0.0.1:15174"
@@ -59,7 +60,8 @@
           ],
           "pinned": true,
           "cover": {
-            "kind": "auto"
+            "kind": "svg",
+            "src": "covers/erp.svg"
           },
           "health": {
             "url": "http://127.0.0.1:15173"
@@ -70,14 +72,15 @@
         {
           "id": "elcaliz-api",
           "name": "API del ERP",
-          "description": "Backend Hono y PostgreSQL; salud en /salud",
+          "description": "Servicios del ERP para integraciones",
           "url": "https://api.elcaliz.lab.andresgaibor.com",
           "tags": [
             "dev"
           ],
           "pinned": false,
           "cover": {
-            "kind": "auto"
+            "kind": "svg",
+            "src": "covers/api.svg"
           },
           "health": {
             "url": "http://127.0.0.1:18787/salud"
@@ -88,14 +91,15 @@
         {
           "id": "elcaliz-asistente",
           "name": "Asistente móvil",
-          "description": "Chat del ERP para móvil, con cliente MCP",
+          "description": "Asistente del ERP para móvil",
           "url": "https://asistente.elcaliz.lab.andresgaibor.com",
           "tags": [
             "dev"
           ],
           "pinned": false,
           "cover": {
-            "kind": "auto"
+            "kind": "svg",
+            "src": "covers/assistant.svg"
           },
           "health": {
             "url": "http://127.0.0.1:5174"
@@ -113,7 +117,7 @@
         {
           "id": "delegation-monitor",
           "name": "Monitor de delegaciones",
-          "description": "Sesiones de agentes: latencia, tokens, errores y delegaciones",
+          "description": "Estado y bitácora de sesiones de agentes",
           "url": "https://dmon.lab.andresgaibor.com",
           "tags": [
             "dev",
@@ -121,7 +125,8 @@
           ],
           "pinned": true,
           "cover": {
-            "kind": "auto"
+            "kind": "svg",
+            "src": "covers/delegation.svg"
           },
           "health": {
             "url": "http://127.0.0.1:5173"
@@ -139,7 +144,8 @@
           ],
           "pinned": false,
           "cover": {
-            "kind": "auto"
+            "kind": "svg",
+            "src": "covers/titula.svg"
           },
           "health": {
             "url": "https://titula.andresgaibor.com"
@@ -165,7 +171,8 @@
           ],
           "pinned": true,
           "cover": {
-            "kind": "auto"
+            "kind": "svg",
+            "src": "covers/billing.svg"
           },
           "health": {
             "url": "http://127.0.0.1:8090/healthz"
@@ -175,15 +182,15 @@
         {
           "id": "facturador-inicio",
           "name": "Presentación",
-          "description": "Portada de presentación del facturador",
+          "description": "Presentación del facturador",
           "url": "https://oracle.tail4a8b59.ts.net:8091/",
           "tags": [
             "local"
           ],
           "pinned": false,
           "cover": {
-            "kind": "emoji",
-            "value": "🧾"
+            "kind": "svg",
+            "src": "covers/presentation.svg"
           },
           "health": {
             "url": "http://127.0.0.1:8090/healthz"
@@ -193,7 +200,7 @@
         {
           "id": "facturador-docs",
           "name": "Documentación",
-          "description": "Gateway fiscal y API /api/v1: firma, SRI y RIDE",
+          "description": "Guías y contrato de la API del facturador",
           "url": "https://oracle.tail4a8b59.ts.net:8091/docs/introduccion",
           "tags": [
             "local",
@@ -201,8 +208,8 @@
           ],
           "pinned": false,
           "cover": {
-            "kind": "emoji",
-            "value": "📘"
+            "kind": "svg",
+            "src": "covers/api-docs.svg"
           },
           "health": {
             "url": "http://127.0.0.1:8090/healthz"
@@ -212,7 +219,7 @@
         {
           "id": "facturador-api",
           "name": "API para ERP (OpenAPI)",
-          "description": "Contrato OpenAPI con JWT para integraciones",
+          "description": "Contrato de la API para integraciones",
           "url": "https://oracle.tail4a8b59.ts.net:8091/openapi.json",
           "tags": [
             "local",
@@ -220,8 +227,8 @@
           ],
           "pinned": false,
           "cover": {
-            "kind": "emoji",
-            "value": "🔌"
+            "kind": "svg",
+            "src": "covers/openapi.svg"
           },
           "health": {
             "url": "http://127.0.0.1:8090/readyz"

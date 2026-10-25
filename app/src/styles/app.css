@@ -661,9 +661,21 @@ kbd {
   display: block;
 }
 
-.identity-glyph {
+.identity-glyph,
+.identity-brand {
   display: inline-grid;
   place-items: center;
+}
+
+.identity-brand {
+  background: var(--surface-2);
+}
+
+.identity-brand img {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+  display: block;
 }
 
 .identity-glyph svg {
@@ -721,6 +733,12 @@ kbd {
   color: var(--text-muted);
   white-space: nowrap;
   flex: none;
+}
+
+/* Entorno: misma cápsula para todos, distinto matiz. El color de salud no
+   participa aquí. */
+.chip[data-tag] {
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
 }
 
 .chip[data-tag="prod"] {
@@ -891,6 +909,11 @@ kbd {
 .view-check {
   margin-left: auto;
   color: var(--accent-text);
+}
+
+.menu-item[aria-checked="true"] {
+  color: var(--accent-text);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 /* ===== Banner de error ===== */

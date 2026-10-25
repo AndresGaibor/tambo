@@ -51,6 +51,19 @@ export function AppIdentity({
     );
   }
 
+  // Logo oficial de una app (p. ej. Storybook): su color propio, sin teñir
+  // de dorado ni del color del grupo.
+  if (app.icon?.startsWith("brand:")) {
+    const file = app.icon.slice("brand:".length);
+    if (/^[a-z0-9-]+\.svg$/.test(file)) {
+      return (
+        <span className="identity identity-brand" style={style} aria-hidden="true">
+          <img src={`/assets/brand/${file}`} alt="" loading="lazy" />
+        </span>
+      );
+    }
+  }
+
   if (app.icon?.startsWith("tambo:")) {
     const glyphId = app.icon.slice("tambo:".length);
     if (/^[a-z0-9-]+$/.test(glyphId)) {
