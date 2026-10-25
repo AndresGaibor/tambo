@@ -81,8 +81,12 @@ export function tamboPlugin(): Plugin {
 
       server.middlewares.use((req, res, next) => {
         void (async () => {
-          const url = new URL(req.url ?? "/", "http://tambo.local");
-          const path = url.pathname;
+          // Path crudo, sin normalizar: new URL() resolvería los segmentos
+          // ".." antes de que el guardián de estáticos pudiera verlos.
+          const raw = req.url ?? "/";
+          const queryAt = raw.indexOf("?");
+          const path = queryAt >= 0 ? raw.slice(0, queryAt) : raw;
+          const params = new URLSearchParams(queryAt >= 0 ? raw.slice(queryAt + 1) : "");
           const method = req.method ?? "GET";
           const guardHeaders = {
             origin: req.headers.origin ?? null,
@@ -145,7 +149,7 @@ export function tamboPlugin(): Plugin {
             send(
               res,
               await uploadAsset(dataDir, {
-                name: url.searchParams.get("name"),
+                name: params.get("name"),
                 contentType: req.headers["content-type"] ?? null,
                 body: raw,
               }),
