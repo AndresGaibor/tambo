@@ -1,209 +1,147 @@
 # Tambo
 
-Portal único de las apps personales y de prueba: una pantalla con todas las apps
-agrupadas por proyecto, estado en vivo, buscador y portadas visuales, instalable
-como PWA. Corre como servidor de desarrollo de Vite+ con un plugin propio; las
-apps siguen corriendo donde ya corrían y Caddy les da nombres limpios.
+**Tu portal de aplicaciones web, en una sola pantalla.** Agrupa proyectos, busca
+entre ellos y comprueba si cada servicio responde. Puedes usarlo para tus
+herramientas personales, un equipo pequeño o un entorno de desarrollo.
 
-## Acceso desde el Mac (interino, sin DNS propio)
+Tambo lee el catálogo desde `data/apps.json`; las apps siguen ejecutándose en
+sus propias direcciones. El portal no las aloja ni reemplaza.
 
-Mientras no existan los registros DNS ni el Caddy definitivo, el portal está
-expuesto con Tailscale Serve, como el resto de las apps de la VM:
+## Qué puedes hacer
 
-- URL: `https://oracle.tail4a8b59.ts.net:15171/` (solo dentro de la tailnet).
-- Servicio: `tambo-dev.service` (systemd de usuario, siempre encendido; es la
-  puerta de las demás apps y sondea salud cada 30 s, no escala a cero).
-- El host interino vive en `TAMBO_ALLOWED_HOSTS` (`vite.config.ts`).
+- Organizar enlaces por proyecto, fijar favoritos y buscarlos por nombre o tag.
+- Ver estados de salud y elegir entre tarjetas compactas o portadas.
+- Editar el catálogo desde la interfaz o directamente en JSON; también puedes
+  importar y exportar una copia.
+- Instalar el portal como PWA en navegadores compatibles.
+- Opcionalmente, controlar servicios `systemd --user` y consultar recursos del
+  servidor donde corre Tambo.
 
-Para desmontarlo cuando llegue el Caddy:
+## Cómo funciona
 
-```bash
-sudo tailscale serve --https=15171 off
-systemctl --user disable --now tambo-dev
+```mermaid
+flowchart LR
+  Browser[Tu navegador] --> Portal[Tambo]
+  Portal --> Catalog[data/apps.json]
+  Portal -->|comprueba salud| Apps[URLs de tus apps]
+  Portal -. opcional .-> Systemd[systemd del servidor]
 ```
 
-## Puesta en marcha definitiva
+Las comprobaciones de salud y el control de `systemd` se hacen desde el servidor
+de Tambo. Por eso una URL como `http://127.0.0.1:3000/health` apunta al servidor,
+no al ordenador de quien abre el portal.
 
-```bash
-cp .env.example .env    # y cargar DNS_API_TOKEN de Cloudflare
-docker compose up -d
-```
+## Inicia Tambo en local
 
-- Tambo escucha en `127.0.0.1:15170` (red del host) y sirve la interfaz, la API
-  y los estáticos de `data/`.
-- Caddy termina TLS (DNS-01 contra Cloudflare) atado a la IP de Tailscale
-  `100.114.65.117` y enruta por nombre de host: el portal y cada app.
-- `data/apps.json` es la única fuente de verdad: editable a mano, desde la
-  interfaz o por un agente; cualquier cambio se refleja en vivo por un evento
-  HMR propio, sin recargar.
-
-## Desarrollo sin Docker
+Requisitos: [Bun](https://bun.sh/) 1.4.3 o compatible. Clona este repositorio
+y, desde su carpeta raíz, ejecuta:
 
 ```bash
 cd app
 bun install
-bun run dev        # espera ../data/apps.json
-bun run check      # formato, lint y tipos
-bun run test       # vitest
-bun run build
-bun run icons      # regenera los PNG de la PWA (sharp)
+bun run dev
 ```
 
-## API interna
+Abre <http://localhost:15170>. El catálogo está en `data/apps.json`, fuera de
+`app/`; el servidor lo carga automáticamente. Reemplázalo por tus datos antes
+de compartir la instancia. Para detenerla, usa `Ctrl+C` en la terminal.
 
-| Ruta | Uso |
+Comandos útiles desde `app/`:
+
+| Comando | Acción |
 | --- | --- |
-| `GET /api/config` | Configuración validada con cabecera `ETag` |
-| `PUT /api/config` | Reemplaza `apps.json`; exige `If-Match`, `X-Tambo: 1` y `Origin` del portal. `412` si cambió, `422` si no valida, `.bak` antes de escribir |
-| `GET /api/health` | Mapa `{ appId: { status, code, ms, checkedAt } }` |
-| `POST /api/health/refresh` | Fuerza un chequeo inmediato |
-| `GET /api/services` | Estado de las unidades systemd declaradas, por app, con RAM y CPU por cgroup y el resumen de la VM |
-| `POST /api/services/<appId>` | `{ "action": "start" \| "stop" }` sobre la unidad de esa app |
-| `GET /shots/<id>.webp`, `GET /assets/*` | Estáticos de `data/` con lista cerrada |
-| `POST /api/assets?name=slug.svg` | Sube SVG/PNG/WebP de hasta 2 MB (fase 2) |
+| `bun run dev` | Inicia el portal para desarrollo |
+| `bun run check` | Revisa formato, lint y tipos |
+| `bun run test` | Ejecuta las pruebas |
+| `bun run build` | Genera la compilación web |
 
-## Interfaz
+## Añade tus aplicaciones
 
-- **Vista compacta (por defecto) y vista Portadas**: la preferencia vive por
-  navegador en `localStorage` (`tambo.view`), nunca en `apps.json`; lo mismo
-  para el tema (`tambo.theme`), los grupos colapsados (`tambo.collapsed`) y el
-  interruptor de atajos `e`/`t`/`1-9` (`tambo.shortcuts`). Toda lectura y
-  escritura de almacenamiento lleva manejo de errores: si falla, la sesión
-  usa los valores por omisión.
-- **Identidad de una app** (igual en anclados y tarjetas): el icono es
-  independiente de la portada. Icono: `brand:<archivo>.svg` (logo oficial
-  con su color propio, p. ej. el coral de Storybook, tiene prioridad sobre
-  la portada), `tambo:<glifo>` del sprite incluido, `lucide:<nombre>` o
-  emoji. Portada (jerarquía): captura real (`shot`) → recurso propio
-  (`svg`/`image` en `data/assets/`) → ilustración funcional del kit
-  (`data/assets/covers/`) → respaldo simple. No se descargan favicons. El
-  sprite va incrustado en el documento (los `<use>` externos a archivo no
-  siempre renderizan) y el trazo se propaga por CSS.
-- **Estados**: Activa, Sin respuesta (tras dos fallos consecutivos del
-  servidor), Sin comprobar (sin chequeo aún) y el aviso global de datos
-  desactualizados cuando falla la actualización de salud, que conserva los
-  últimos valores y ofrece Reintentar.
-- **Recursos**: el control del encabezado se llama "Servidor OCI" y no
-  muestra cifras: el panel despliega CPU (% del total de la VM y sus
-  núcleos), RAM usada/total, carga, el origen (cgroups del host de la VM,
-  nunca el MacBook) y la hora de la última lectura. Cuando una unidad sirve
-  a varias apps (El Cáliz comparte `elcaliz-dev.service`), sus contadores son
-  del conjunto y no se atribuyen a cada app: en Detalles se muestra "No
-  disponible por app" con la explicación.
-- **Densidad**: tarjetas compactas de 132 px de altura base (crecen con el
-  contenido), pie común con entorno y estado anclado al fondo, hasta cinco
-  columnas en ventanas anchas, 16 px entre título y cuadrícula y 28 px entre
-  secciones. `prod` y `dev` comparten estructura de chip; el verde queda
-  reservado a la salud. El encabezado tiene fondo opaco (verificado con
-  scroll real) y contraste AA medido por cálculo en ambos temas.
-- **Atajos**: `/` y Cmd+K (Ctrl K fuera de macOS) enfocan la búsqueda;
-  Escape cierra primero el menú o panel superior y después limpia la
-  búsqueda; `e`, `t` y `1-9` son conmutables y no actúan nunca mientras se
-  escribe o se compone texto (IME).
-
-## Encendido, apagado y recursos desde el portal
-
-Una app puede declarar su unidad systemd **de usuario** en `apps.json`:
+Puedes usar **Editar** en Tambo o modificar `data/apps.json`. Este ejemplo es
+un catálogo mínimo válido; cambia las URLs por las de tus servicios:
 
 ```json
-"service": "elcaliz-dev.service"
+{
+  "version": 1,
+  "settings": {
+    "theme": "system",
+    "openIn": "newTab",
+    "healthIntervalSec": 30
+  },
+  "groups": [
+    {
+      "id": "desarrollo",
+      "name": "Desarrollo",
+      "color": "teal",
+      "apps": [
+        {
+          "id": "mi-dashboard",
+          "name": "Mi dashboard",
+          "description": "Métricas y actividad del proyecto",
+          "url": "https://dashboard.example.com",
+          "tags": ["equipo", "prod"],
+          "pinned": true,
+          "health": { "url": "https://dashboard.example.com/health" }
+        }
+      ]
+    }
+  ]
+}
 ```
 
-Con eso, al hacer clic en una app dormida se despierta automáticamente
-(Sablier) y se abre una página intermedia que redirige cuando está lista.
-El menú contextual y el drawer de detalles permiten encender/apagar
-manualmente. Reglas de seguridad: la unidad siempre sale de
-`apps.json` (nunca de la petición), las acciones exigen `X-Tambo: 1` y `Origin`
-del portal, y se ejecutan con `systemctl --user` contra el bus de la sesión
-del propietario. Varias apps pueden compartir una unidad (El Cáliz entera es
-`elcaliz-dev.service`); el estado se consulta una sola vez por unidad.
+Cada grupo necesita un `id`, un nombre, un color y una lista de apps. Cada app
+necesita un `id`, un nombre y una URL `http` o `https`. `health` es opcional; si
+lo omites, Tambo no comprobará el estado de esa app. Los IDs usan minúsculas,
+números y guiones, y deben ser únicos. Los colores disponibles son `ember`,
+`gold`, `moss`, `teal`, `sky`, `indigo`, `violet` y `rose`.
 
-Además, para cada unidad activa el portal lee su **cgroup v2**: muestra en el
-pie de la tarjeta la RAM real (`memory.stat: anon`, todo el árbol de procesos
-de la unidad) y el CPU como porcentaje del total de la VM (delta de
-`cpu.stat` entre muestreos de 15 s), y en la cabecera el resumen de la
-máquina (CPU, RAM usada de la total, carga). El primer periodo tras arrancar
-no tiene CPU hasta que exista un delta.
+Al guardar cambios en el archivo, Tambo actualiza la vista automáticamente.
+Guarda una copia de `data/apps.json` y de `data/assets/` si añades portadas o
+recursos propios.
 
-En el despliegue con Docker esto necesita acceso al bus de systemd: montar
-`/run/user/1000/bus` y exportar `DBUS_SESSION_BUS_ADDRESS`. Quedó pendiente
-para cuando llegue el contenedor; hoy funciona con la unidad `tambo-dev`.
+## Abrirlo desde otros dispositivos
 
-## Escala a cero con Sablier
+Por defecto, el servidor escucha solo en `127.0.0.1:15170`. Para entrar desde
+otro dispositivo, colócalo detrás de un proxy HTTPS en una red privada y permite
+el nombre de host que usarás:
 
-Las apps que declaran `service` pueden marcarse con `[X-Sablier]` en su
-unidad systemd. El portal se integra con Sablier (API en `:10001`) para:
+```bash
+TAMBO_ALLOWED_HOSTS=portal.example.com bun run dev
+```
 
-- **Auto-encendido**: al hacer clic en una app dormida, el portal pide a
-  Sablier que la despierte y abra una sesión (30 min por defecto,
-  configurable por app con `sessionMinutes`).
-- **Escala a cero**: tras la sesión sin tráfico, Sablier detiene la instancia.
-- **UI**: chip "En sesión / Dormida" en tarjetas, cuenta regresiva, barra de
-  progreso en el drawer, resumen de RAM liberada en el panel servidor.
-- **Página intermedia**: `/wake.html` muestra "Despertando…" y redirige
-  cuando el health check pasa.
+También puedes cambiar el puerto con `TAMBO_PORT`. Cada instalación comparte
+un único catálogo entre sus visitantes; **Tambo no incluye inicio de sesión ni
+gestión de usuarios**. Mantén el portal en una red de confianza y configura
+autenticación en el proxy. La protección de origen de los endpoints no sustituye
+esa autenticación. Esto es especialmente importante si habilitas acciones sobre
+servicios `systemd`.
 
-Sablier se ejecuta como servicio de usuario (`sablier-systemd.service`) con
-`--provider.auto-warm-externally-started` para no matar unidades arrancadas
-desde el portal.
+## Integración opcional con systemd
 
-## DNS y red (pendiente de crear los registros)
+En Linux, puedes asociar una app a una unidad de usuario añadiendo su nombre al
+objeto de la app:
 
-El DNS de `andresgaibor.com` está en Cloudflare. Registros A hacia
-`100.114.65.117` (solo alcanzable dentro de la tailnet):
+```json
+"service": "mi-dashboard.service"
+```
 
-- `tambo.lab.andresgaibor.com`
-- comodín por proyecto: `*.elcaliz.lab.andresgaibor.com`
-- hosts sueltos: `dmon.lab.andresgaibor.com`
+El servidor debe ejecutarse bajo el mismo usuario que posee esa unidad. Tambo
+puede encenderla o detenerla desde la interfaz y, en Linux con cgroups v2,
+mostrar su uso de CPU y memoria. Si usas Sablier, también puede solicitar el
+despertar de una app dormida y mostrar su sesión. Deja estas opciones fuera del
+catálogo si no necesitas controlar procesos del servidor.
 
-Titula ya tiene producción propia (`titula.andresgaibor.com` vía Traefik) y no
-pasa por este Caddy.
+## Detalles técnicos
 
-### Conflictos a resolver antes del primer `up` (decisión de despliegue)
+- Interfaz: React, TypeScript y Vite+ (`app/`).
+- Configuración validada con Zod (`app/src/schema.ts`).
+- Datos y portadas: `data/`.
+- API local: `/api/config`, `/api/health` y `/api/services`.
+- `compose.yaml` y `caddy/` contienen el despliegue Docker/Caddy de este
+  repositorio; revisa y adapta red, dominios, TLS y permisos antes de reutilizarlo.
 
-Hoy el 80/443 de la VM están ocupados y `tailscale serve` publica las apps:
+## Licencia
 
-- `traefik` escucha en `0.0.0.0:80` y `10.0.0.77:443`.
-- `tailscaled` escucha en `100.114.65.117:443` y publica cada app por puerto
-  (elcaliz-tailscale-serve.service).
-
-El Caddy de Tambo necesita `100.114.65.117:443`, así que migrar implica apagar
-`elcaliz-tailscale-serve` (y el resto de `tailscale serve`) al mismo tiempo.
-Traefik no estorna mientras siga atado a la IP pública. Ninguna app debe abrir
-puerto en la lista de seguridad de OCI.
-
-### Cambios necesarios en las apps
-
-Con Caddy delante, cada app Vite de la VM debe: escuchar en `127.0.0.1`,
-incluir su nuevo host en `server.allowedHosts` y fijar `server.hmr.clientPort`
-en 443 para que el websocket del HMR atraviese el proxy.
-
-## Puertos reales mapeados (VM oci)
-
-| App | Local | Host limpio |
-| --- | --- | --- |
-| ERP El Cáliz | 127.0.0.1:15173 | oracle.tail4a8b59.ts.net:15176 |
-| Admin El Cáliz | 127.0.0.1:15174 | oracle.tail4a8b59.ts.net:15175 |
-| API El Cáliz (`/salud`) | 127.0.0.1:18787 | oracle.tail4a8b59.ts.net:18788/salud |
-| Storybook (web) | 127.0.0.1:6007 | oracle.tail4a8b59.ts.net:6006 |
-| Asistente | 127.0.0.1:5174 | oracle.tail4a8b59.ts.net:5176 |
-| Delegation Monitor | 127.0.0.1:5173 | oracle.tail4a8b59.ts.net:3301 |
-| Titula (prod) | via Traefik | titula.andresgaibor.com |
-
-## Estado de las fases
-
-- Fase 1 (MVP): completa. Falta la verificación desde el Mac, que requiere los
-  registros DNS y el despliegue.
-- Fase 2 (edición): `PUT /api/config`, evento HMR al cambiar el archivo, modo
-  edición con arrastre (`@dnd-kit`), alta y baja, subida de portadas,
-  importar y exportar (`ConfigIO`).
-- Fase 3 (capturas con Playwright): pendiente; el servicio `shots` está
-  esbozado como comentario en `compose.yaml`.
-
-## Decisiones abiertas
-
-- Proveedor DNS: resuelto como Cloudflare (módulo `caddy-dns/cloudflare`).
-- Puerto del Storybook: `storybook dev -p 6006` en `apps/web` de ElCaliz.
-- Service worker en desarrollo: no se registra (`import.meta.env.PROD`); si
-  Chrome exigiera uno para instalar, se evalúa uno que excluya las rutas del
-  HMR.
+Este repositorio no incluye actualmente un archivo `LICENSE`. Su propietario
+debe añadir una licencia antes de conceder permisos de redistribución o uso
+comercial.
