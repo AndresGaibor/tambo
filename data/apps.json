@@ -17,43 +17,79 @@
           "name": "ERP",
           "description": "Aplicación web del ERP",
           "url": "https://erp.elcaliz.lab.andresgaibor.com",
-          "tags": ["dev"],
+          "tags": [
+            "dev"
+          ],
           "pinned": true,
-          "cover": { "kind": "auto" },
-          "health": { "url": "http://127.0.0.1:15173" }
+          "cover": {
+            "kind": "auto"
+          },
+          "health": {
+            "url": "http://127.0.0.1:15173"
+          },
+          "service": "elcaliz-dev.service"
         },
         {
           "id": "elcaliz-admin",
           "name": "Admin de la plataforma",
           "url": "https://admin.elcaliz.lab.andresgaibor.com",
-          "tags": ["dev"],
-          "cover": { "kind": "emoji", "value": "🛠️" },
-          "health": { "url": "http://127.0.0.1:15174" }
+          "tags": [
+            "dev"
+          ],
+          "cover": {
+            "kind": "emoji",
+            "value": "🛠️"
+          },
+          "health": {
+            "url": "http://127.0.0.1:15174"
+          },
+          "service": "elcaliz-dev.service"
         },
         {
           "id": "elcaliz-api",
           "name": "API del ERP",
           "description": "API del ERP con ruta de salud en /salud",
           "url": "https://api.elcaliz.lab.andresgaibor.com",
-          "tags": ["dev"],
-          "cover": { "kind": "auto" },
-          "health": { "url": "http://127.0.0.1:18787/salud" }
+          "tags": [
+            "dev"
+          ],
+          "cover": {
+            "kind": "auto"
+          },
+          "health": {
+            "url": "http://127.0.0.1:18787/salud"
+          },
+          "service": "elcaliz-dev.service"
         },
         {
           "id": "elcaliz-storybook",
           "name": "Storybook",
           "url": "https://sb.elcaliz.lab.andresgaibor.com",
-          "tags": ["dev"],
-          "cover": { "kind": "shot" },
-          "health": { "url": "http://127.0.0.1:6006" }
+          "tags": [
+            "dev"
+          ],
+          "cover": {
+            "kind": "shot"
+          },
+          "health": {
+            "url": "http://127.0.0.1:6006"
+          },
+          "service": "elcaliz-storybook.service"
         },
         {
           "id": "elcaliz-asistente",
           "name": "Asistente",
           "url": "https://asistente.elcaliz.lab.andresgaibor.com",
-          "tags": ["dev"],
-          "cover": { "kind": "auto" },
-          "health": { "url": "http://127.0.0.1:5174" }
+          "tags": [
+            "dev"
+          ],
+          "cover": {
+            "kind": "auto"
+          },
+          "health": {
+            "url": "http://127.0.0.1:5174"
+          },
+          "service": "elcaliz-dev.service"
         }
       ]
     },
@@ -67,18 +103,32 @@
           "name": "Delegation Monitor",
           "description": "Dashboard de sesiones de agentes",
           "url": "https://dmon.lab.andresgaibor.com",
-          "tags": ["dev", "personal"],
+          "tags": [
+            "dev",
+            "personal"
+          ],
           "pinned": true,
-          "cover": { "kind": "auto" },
-          "health": { "url": "http://127.0.0.1:5173" }
+          "cover": {
+            "kind": "auto"
+          },
+          "health": {
+            "url": "http://127.0.0.1:5173"
+          },
+          "service": "delegation-monitor-dev.service"
         },
         {
           "id": "titula",
           "name": "Titula",
           "url": "https://titula.andresgaibor.com",
-          "tags": ["prod"],
-          "cover": { "kind": "auto" },
-          "health": { "url": "https://titula.andresgaibor.com" }
+          "tags": [
+            "prod"
+          ],
+          "cover": {
+            "kind": "auto"
+          },
+          "health": {
+            "url": "https://titula.andresgaibor.com"
+          }
         }
       ]
     }

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Link2, Pencil, Pin, PinOff, Trash2 } from "lucide-react";
+import { Link2, Pencil, Pin, PinOff, Power, Trash2 } from "lucide-react";
 import type { AppEntry } from "../schema";
 import { findApp } from "../schema";
 import { removeApp, setPinned } from "../lib/edit";
@@ -62,6 +62,13 @@ export function AppMenu({
     onClose();
   };
 
+  const onPower = () => {
+    const { services, powerAction } = useStore.getState();
+    const active = services[app.id]?.state === "active";
+    if (app.service) void powerAction(app.id, active ? "stop" : "start");
+    onClose();
+  };
+
   const style = {
     left: Math.min(x, window.innerWidth - 210),
     top: Math.min(y, window.innerHeight - 170),
@@ -80,6 +87,12 @@ export function AppMenu({
         )}
         {app.pinned ? "Desanclar" : "Anclar"}
       </button>
+      {app.service && (
+        <button type="button" className="menu-item" role="menuitem" onClick={onPower}>
+          <Power size={15} strokeWidth={1.75} />
+          {useStore.getState().services[app.id]?.state === "active" ? "Apagar" : "Encender"}
+        </button>
+      )}
       {editing && (
         <>
           <button type="button" className="menu-item" role="menuitem" onClick={onEdit}>

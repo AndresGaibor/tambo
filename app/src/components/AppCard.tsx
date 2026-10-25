@@ -1,7 +1,7 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties, type MouseEvent } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, MoreHorizontal } from "lucide-react";
+import { GripVertical, MoreHorizontal, Power } from "lucide-react";
 import type { AppEntry, Group, GroupColor } from "../schema";
 import { useStore } from "../store";
 import { hostOf, statusText, statusVar } from "../lib/format";
@@ -23,6 +23,9 @@ export function AppCard({
   onOpenMenu: (app: AppEntry, point: MenuPoint) => void;
 }) {
   const health = useStore((s) => s.health[app.id]);
+  const service = useStore((s) => (app.service ? s.services[app.id] : undefined));
+  const powerAction = useStore((s) => s.powerAction);
+  const [powering, setPowering] = useState(false);
   const editing = useStore((s) => s.editing);
   const openIn = useStore((s) => s.config?.settings.openIn ?? "newTab");
   const sortable = useSortable({
@@ -31,9 +34,20 @@ export function AppCard({
     disabled: !editing,
   });
 
-  const stop = (event: React.MouseEvent) => {
+  const stop = (event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
+  };
+
+  const onPower = async (event: MouseEvent) => {
+    stop(event);
+    if (powering) return;
+    setPowering(true);
+    try {
+      await powerAction(app.id, service?.state === "active" ? "stop" : "start");
+    } finally {
+      setPowering(false);
+    }
   };
 
   return (
@@ -82,6 +96,22 @@ export function AppCard({
         </div>
       </div>
       <div className="card-actions">
+        {app.service && (
+          <button
+            type="button"
+            className="card-action-btn"
+            aria-label={service?.state === "active" ? `Apagar ${app.name}` : `Encender ${app.name}`}
+            title={service?.state === "active" ? `Apagar ${app.name}` : `Encender ${app.name}`}
+            disabled={powering}
+            onClick={(event) => void onPower(event)}
+          >
+            <Power
+              size={16}
+              strokeWidth={1.75}
+              style={service?.state === "active" ? { color: "var(--ok)" } : undefined}
+            />
+          </button>
+        )}
         {editing && (
           <button
             type="button"

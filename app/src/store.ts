@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { HealthEntry } from "../server/health";
+import type { ServiceEntry } from "../server/services";
 import type { TamboConfig } from "./schema";
 
 export type ThemeMode = "dark" | "light" | "system";
@@ -39,9 +40,11 @@ type TamboState = {
   config: TamboConfig | null;
   etag: string | null;
   health: Record<string, HealthEntry>;
+  services: Record<string, ServiceEntry>;
   online: boolean;
   loadError: string | null;
   saveError: string | null;
+  actionError: string | null;
   saving: boolean;
   conflict: boolean;
   query: string;
@@ -53,6 +56,9 @@ type TamboState = {
   applyConfig: (config: TamboConfig, etag: string) => void;
   load: () => Promise<void>;
   loadHealth: () => Promise<void>;
+  loadServices: () => Promise<void>;
+  powerAction: (appId: string, action: "start" | "stop") => Promise<void>;
+  clearActionError: () => void;
   save: (next: TamboConfig) => Promise<boolean>;
   setQuery: (query: string) => void;
   setEditing: (editing: boolean) => void;
@@ -67,9 +73,11 @@ export const useStore = create<TamboState>((set, get) => ({
   config: null,
   etag: null,
   health: {},
+  services: {},
   online: true,
   loadError: null,
   saveError: null,
+  actionError: null,
   saving: false,
   conflict: false,
   query: "",
@@ -115,6 +123,49 @@ export const useStore = create<TamboState>((set, get) => ({
       set({ online: false });
     }
   },
+
+  loadServices: async () => {
+    try {
+      const response = await fetch("/api/services");
+      if (!response.ok) return;
+      const body = (await response.json()) as { services: Record<string, ServiceEntry> };
+      set({ services: body.services, online: true });
+    } catch {
+      set({ online: false });
+    }
+  },
+
+  powerAction: async (appId, action) => {
+    try {
+      const response = await fetch(`/api/services/${appId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Tambo": "1" },
+        body: JSON.stringify({ action }),
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        set({
+          actionError:
+            body.error ?? `no se pudo ${action === "start" ? "encender" : "apagar"} la app`,
+        });
+        return;
+      }
+      set({ actionError: null });
+    } catch {
+      set({ online: false });
+      return;
+    }
+    void get().loadServices();
+    // El arranque en frío tarda; se re-muestrea salud y unidades un rato.
+    for (const delay of [4_000, 15_000, 40_000]) {
+      setTimeout(() => {
+        void useStore.getState().loadServices();
+        void useStore.getState().loadHealth();
+      }, delay);
+    }
+  },
+
+  clearActionError: () => set({ actionError: null }),
 
   save: async (next) => {
     const { etag, config } = get();

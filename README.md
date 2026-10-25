@@ -57,8 +57,29 @@ pnpm icons      # regenera los PNG de la PWA (sharp)
 | `PUT /api/config` | Reemplaza `apps.json`; exige `If-Match`, `X-Tambo: 1` y `Origin` del portal. `412` si cambió, `422` si no valida, `.bak` antes de escribir |
 | `GET /api/health` | Mapa `{ appId: { status, code, ms, checkedAt } }` |
 | `POST /api/health/refresh` | Fuerza un chequeo inmediato |
+| `GET /api/services` | Estado de las unidades systemd declaradas, por app |
+| `POST /api/services/<appId>` | `{ "action": "start" \| "stop" }` sobre la unidad de esa app |
 | `GET /shots/<id>.webp`, `GET /assets/*` | Estáticos de `data/` con lista cerrada |
 | `POST /api/assets?name=slug.svg` | Sube SVG/PNG/WebP de hasta 2 MB (fase 2) |
+
+## Encendido y apagado desde el portal
+
+Una app puede declarar su unidad systemd **de usuario** en `apps.json`:
+
+```json
+"service": "elcaliz-dev.service"
+```
+
+Con eso la tarjeta muestra un botón de encendido y el menú contextual gana
+«Encender» o «Apagar». Reglas de seguridad: la unidad siempre sale de
+`apps.json` (nunca de la petición), las acciones exigen `X-Tambo: 1` y `Origin`
+del portal, y se ejecutan con `systemctl --user` contra el bus de la sesión
+del propietario. Varias apps pueden compartir una unidad (El Cáliz entera es
+`elcaliz-dev.service`); el estado se consulta una vez por unidad.
+
+En el despliegue con Docker esto necesita acceso al bus de systemd: montar
+`/run/user/1000/bus` y exportar `DBUS_SESSION_BUS_ADDRESS`. Quedó pendiente
+para cuando llegue el contenedor; hoy funciona con la unidad `tambo-dev`.
 
 ## DNS y red (pendiente de crear los registros)
 

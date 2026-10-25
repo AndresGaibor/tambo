@@ -31,8 +31,13 @@ export default function App() {
   useEffect(() => {
     void load();
     void loadHealth();
+    void useStore.getState().loadServices();
     const timer = setInterval(() => void useStore.getState().loadHealth(), 10_000);
-    return () => clearInterval(timer);
+    const servicesTimer = setInterval(() => void useStore.getState().loadServices(), 15_000);
+    return () => {
+      clearInterval(timer);
+      clearInterval(servicesTimer);
+    };
   }, [load, loadHealth]);
 
   // Actualización en vivo: el servidor avisa con un evento HMR propio y se

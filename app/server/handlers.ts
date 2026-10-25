@@ -178,3 +178,52 @@ export async function uploadAsset(
   await writeFile(join(dir, filename), input.body);
   return { status: 201, body: { src: filename }, headers: { Location: `/assets/${filename}` } };
 }
+
+/** Guardia de escritura: X-Tambo: 1 y Origin igual al host del portal. */
+export function writeAllowed(input: {
+  origin?: string | null;
+  host?: string | null;
+  xTambo?: string | null;
+  secure?: boolean;
+}): boolean {
+  if (input.xTambo !== "1" || !input.origin || !input.host) return false;
+  const scheme = input.secure ? "https" : "http";
+  return input.origin === `${scheme}://${input.host}` || input.origin === `http://${input.host}`;
+}
+
+/** Estado de las unidades systemd declaradas en apps.json. */
+export async function getServices(deps: {
+  getConfig: () => import("../src/schema").TamboConfig | null;
+  snapshot: (config: import("../src/schema").TamboConfig | null) => Promise<{
+    services: Record<string, { unit: string; state: string }>;
+  }>;
+}): Promise<ApiResponse> {
+  const { services } = await deps.snapshot(deps.getConfig());
+  return { status: 200, body: { services }, headers: noCache };
+}
+
+/**
+ * Enciende o apaga la unidad de una app. La unidad sale de apps.json:
+ * nunca se acepta un nombre de unidad enviado por el cliente.
+ */
+export async function postService(deps: {
+  getConfig: () => import("../src/schema").TamboConfig | null;
+  unitFor: (config: import("../src/schema").TamboConfig | null, appId: string) => string | null;
+  runAction: (unit: string, action: "start" | "stop") => Promise<{ state: string }>;
+  action: unknown;
+  appId: string;
+}): Promise<ApiResponse> {
+  if (deps.action !== "start" && deps.action !== "stop") {
+    return { status: 400, body: { error: "action debe ser start o stop" } };
+  }
+  const unit = deps.unitFor(deps.getConfig(), deps.appId);
+  if (!unit) {
+    return { status: 404, body: { error: "la app no declara service" } };
+  }
+  try {
+    const result = await deps.runAction(unit, deps.action);
+    return { status: 200, body: { ok: true, unit, ...result }, headers: noCache };
+  } catch (error) {
+    return { status: 500, body: { error: `systemctl falló: ${(error as Error).message}` } };
+  }
+}

@@ -39,6 +39,10 @@ export const healthSchema = z.strictObject({
 });
 export type Health = z.output<typeof healthSchema>;
 
+const unitName = z
+  .string()
+  .regex(/^[A-Za-z0-9@:_\-.]+\.service$/, "nombre de unidad systemd .service");
+
 export const appSchema = z.strictObject({
   id: slug,
   name: z.string().min(1).max(64),
@@ -48,6 +52,8 @@ export const appSchema = z.strictObject({
   pinned: z.boolean().default(false),
   cover: coverSchema.default({ kind: "auto" }),
   health: healthSchema.optional(),
+  // Unidad systemd de usuario que enciende esta app desde el portal.
+  service: unitName.optional(),
 });
 export type AppEntry = z.output<typeof appSchema>;
 

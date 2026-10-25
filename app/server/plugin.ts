@@ -10,13 +10,17 @@ import {
   MAX_BODY_BYTES,
   getConfig,
   getHealth,
+  getServices,
+  postService,
   putConfig,
   refreshHealth,
   resolveStaticPath,
   uploadAsset,
+  writeAllowed,
   type ApiResponse,
 } from "./handlers";
 import { HealthService } from "./health";
+import { runServiceAction, servicesSnapshot, unitFor } from "./services";
 
 function send(res: ServerResponse, api: ApiResponse): void {
   const headers = { "Content-Type": "application/json; charset=utf-8", ...api.headers };
@@ -63,7 +67,11 @@ export function tamboPlugin(): Plugin {
       };
 
       const health = new HealthService({ getConfig: () => latest });
-      void reload().then(() => health.start());
+      // Primer chequeo inmediato al arrancar; luego, cada healthIntervalSec.
+      void reload().then(() => {
+        health.start();
+        void health.refresh();
+      });
       server.httpServer?.on("close", () => health.stop());
 
       // Actualización en vivo: cualquier cambio de apps.json, venga de la
@@ -191,7 +199,47 @@ export function tamboPlugin(): Plugin {
             return;
           }
 
+          if (path === "/api/services" && method === "GET") {
+            send(
+              res,
+              await getServices({
+                getConfig: () => latest,
+                snapshot: servicesSnapshot,
+              }),
+            );
+            return;
+          }
+
           if (path.startsWith("/api/")) {
+            const serviceMatch = /^\/api\/services\/([a-z0-9-]+)$/.exec(path);
+            if (serviceMatch && method === "POST") {
+              if (!writeAllowed(guardHeaders)) {
+                send(res, { status: 403, body: { error: "petición de escritura no permitida" } });
+                return;
+              }
+              const raw = await readBody(req, MAX_BODY_BYTES);
+              if (!Buffer.isBuffer(raw)) {
+                send(res, { status: 400, body: { error: "no se pudo leer el cuerpo" } });
+                return;
+              }
+              let action: unknown;
+              try {
+                action = JSON.parse(raw.toString("utf8")).action;
+              } catch {
+                action = null;
+              }
+              send(
+                res,
+                await postService({
+                  getConfig: () => latest,
+                  unitFor,
+                  runAction: runServiceAction,
+                  action,
+                  appId: serviceMatch[1],
+                }),
+              );
+              return;
+            }
             send(res, { status: 404, body: { error: "ruta desconocida" } });
             return;
           }

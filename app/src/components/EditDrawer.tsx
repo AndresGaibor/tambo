@@ -24,6 +24,7 @@ type AppForm = {
   coverSrc: string;
   healthUrl: string;
   healthExpect: string;
+  service: string;
 };
 
 type GroupForm = { name: string; color: GroupColor; icon: string };
@@ -39,6 +40,7 @@ const EMPTY_APP: AppForm = {
   coverSrc: "",
   healthUrl: "",
   healthExpect: "",
+  service: "",
 };
 
 function appToForm(app: AppEntry): AppForm {
@@ -57,6 +59,7 @@ function appToForm(app: AppEntry): AppForm {
       : typeof app.health.expect === "number"
         ? String(app.health.expect)
         : `${app.health.expect[0]}-${app.health.expect[1]}`,
+    service: app.service ?? "",
   };
 }
 
@@ -162,6 +165,7 @@ export function EditDrawer() {
             },
           }
         : {}),
+      ...(appForm.service.trim() ? { service: appForm.service.trim() } : {}),
     };
     return app;
   };
@@ -448,6 +452,16 @@ export function EditDrawer() {
                   onChange={(e) => setApp({ healthExpect: e.target.value })}
                 />
                 {errors.healthExpect && <span className="field-error">{errors.healthExpect}</span>}
+              </div>
+              <div className="field">
+                <label htmlFor="f-service">Unidad systemd (opcional)</label>
+                <input
+                  id="f-service"
+                  placeholder="mi-app.service"
+                  value={appForm.service}
+                  onChange={(e) => setApp({ service: e.target.value })}
+                />
+                {errors.service && <span className="field-error">{errors.service}</span>}
               </div>
             </>
           ) : (
