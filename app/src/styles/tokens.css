@@ -1,0 +1,107 @@
+/*
+ * Tambo: tokens del sistema visual.
+ * El tema oscuro vive en :root; el claro en :root[data-theme="light"] y,
+ * cuando el ajuste es "system" (sin data-theme), en el bloque
+ * prefers-color-scheme al final.
+ */
+
+:root {
+  --bg: #0b0d12;
+  --surface: #12151c;
+  --surface-2: #181c25;
+  --border: #232836;
+  --text: #e8eaf0;
+  --text-muted: #8a92a6;
+  --accent: #f5b83d;
+  --accent-text: #f5b83d;
+  --accent-fg: #1a1306;
+
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --down: #f87171;
+  --unknown: #64748b;
+
+  --c-ember: #f97316;
+  --c-gold: #f5b83d;
+  --c-moss: #84cc16;
+  --c-teal: #2dd4bf;
+  --c-sky: #38bdf8;
+  --c-indigo: #818cf8;
+  --c-violet: #c084fc;
+  --c-rose: #fb7185;
+
+  --font-ui: "Inter Variable", system-ui, -apple-system, sans-serif;
+  --font-display: "Space Grotesk Variable", "Inter Variable", sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", monospace;
+
+  --radius-card: 14px;
+  --radius-field: 10px;
+  --radius-panel: 16px;
+  --dur-fast: 150ms;
+  --dur-panel: 200ms;
+  --shadow-card: 0 0 0 transparent;
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #f7f5f0;
+  --surface: #ffffff;
+  --surface-2: #f0ede5;
+  --border: #e4e0d6;
+  --text: #1b1d24;
+  --text-muted: #6b7080;
+  --accent: #e0a020;
+  --accent-text: #8a5a00;
+  --accent-fg: #1b1d24;
+
+  --ok: #0f9d6b;
+  --warn: #b7791f;
+  --down: #d64545;
+  --unknown: #8a90a0;
+
+  --c-ember: #d9560b;
+  --c-gold: #b87a00;
+  --c-moss: #5e9a0c;
+  --c-teal: #0d9488;
+  --c-sky: #0a7bb8;
+  --c-indigo: #5b5bd6;
+  --c-violet: #8e4ec6;
+  --c-rose: #d6336c;
+
+  --shadow-card: 0 1px 2px rgba(27, 29, 36, 0.06), 0 8px 24px rgba(27, 29, 36, 0.08);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]):not([data-theme="light"]) {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface-2: #f0ede5;
+    --border: #e4e0d6;
+    --text: #1b1d24;
+    --text-muted: #6b7080;
+    --accent: #e0a020;
+    --accent-text: #8a5a00;
+    --accent-fg: #1b1d24;
+
+    --ok: #0f9d6b;
+    --warn: #b7791f;
+    --down: #d64545;
+    --unknown: #8a90a0;
+
+    --c-ember: #d9560b;
+    --c-gold: #b87a00;
+    --c-moss: #5e9a0c;
+    --c-teal: #0d9488;
+    --c-sky: #0a7bb8;
+    --c-indigo: #5b5bd6;
+    --c-violet: #8e4ec6;
+    --c-rose: #d6336c;
+
+    --shadow-card: 0 1px 2px rgba(27, 29, 36, 0.06), 0 8px 24px rgba(27, 29, 36, 0.08);
+
+    color-scheme: light;
+  }
+}
