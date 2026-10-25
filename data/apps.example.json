@@ -1,0 +1,240 @@
+{
+  "version": 1,
+  "settings": {
+    "theme": "system",
+    "openIn": "newTab",
+    "healthIntervalSec": 30
+  },
+  "groups": [
+    {
+      "id": "elcaliz",
+      "name": "El Cáliz",
+      "color": "gold",
+      "icon": "lucide:leaf",
+      "apps": [
+        {
+          "id": "elcaliz-storybook",
+          "name": "Storybook",
+          "description": "Catálogo de componentes y vistas del ERP",
+          "url": "https://storybook.example.com",
+          "tags": [
+            "dev"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "svg",
+            "src": "covers/storybook.svg"
+          },
+          "health": {
+            "url": "http://127.0.0.1:PORT"
+          },
+          "service": "elcaliz-storybook.service",
+          "icon": "brand:storybook.svg"
+        },
+        {
+          "id": "elcaliz-admin",
+          "name": "Admin de plataforma",
+          "description": "Organizaciones, suscripciones y accesos",
+          "url": "https://admin.example.com",
+          "tags": [
+            "dev"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "svg",
+            "src": "covers/admin.svg"
+          },
+          "health": {
+            "url": "http://127.0.0.1:PORT"
+          },
+          "service": "elcaliz-admin.service",
+          "icon": "tambo:admin"
+        },
+        {
+          "id": "elcaliz-erp",
+          "name": "ERP contable",
+          "description": "Ventas, POS, inventario y facturación",
+          "url": "https://app.example.com",
+          "tags": [
+            "dev"
+          ],
+          "pinned": true,
+          "cover": {
+            "kind": "svg",
+            "src": "covers/erp.svg"
+          },
+          "health": {
+            "url": "http://127.0.0.1:PORT"
+          },
+          "service": "elcaliz-web.service",
+          "icon": "tambo:erp"
+        },
+        {
+          "id": "elcaliz-api",
+          "name": "API del ERP",
+          "description": "Para integrar el ERP desde otras aplicaciones",
+          "url": "https://api.example.com/salud",
+          "tags": [
+            "dev"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "svg",
+            "src": "covers/api.svg"
+          },
+          "health": {
+            "url": "http://127.0.0.1:PORT"
+          },
+          "service": "elcaliz-api.service",
+          "icon": "tambo:api"
+        },
+        {
+          "id": "elcaliz-asistente",
+          "name": "Asistente móvil",
+          "description": "Chat con el ERP desde el móvil",
+          "url": "https://assistant.example.com",
+          "tags": [
+            "dev"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "svg",
+            "src": "covers/assistant.svg"
+          },
+          "health": {
+            "url": "http://127.0.0.1:PORT"
+          },
+          "service": "elcaliz-asistente.service",
+          "icon": "tambo:assistant"
+        }
+      ]
+    },
+    {
+      "id": "herramientas",
+      "name": "Herramientas",
+      "color": "teal",
+      "apps": [
+        {
+          "id": "delegation-monitor",
+          "name": "Monitor de delegaciones",
+          "description": "Estado y bitácora de sesiones de agentes",
+          "url": "https://monitor.example.com",
+          "tags": [
+            "dev",
+            "personal"
+          ],
+          "pinned": true,
+          "cover": {
+            "kind": "svg",
+            "src": "covers/delegation.svg"
+          },
+          "health": {
+            "url": "http://127.0.0.1:PORT"
+          },
+          "service": "delegation-monitor-dev.service",
+          "icon": "tambo:delegation"
+        },
+        {
+          "id": "titula",
+          "name": "Titula",
+          "description": "Estado y validación de la documentación académica",
+          "url": "https://titula.example.com",
+          "tags": [
+            "prod"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "svg",
+            "src": "covers/titula.svg"
+          },
+          "health": {
+            "url": "https://titula.andresgaibor.com"
+          },
+          "icon": "tambo:titula"
+        }
+      ]
+    },
+    {
+      "id": "facturador",
+      "name": "Facturador",
+      "color": "indigo",
+      "icon": "lucide:receipt",
+      "apps": [
+        {
+          "id": "facturador-portal",
+          "name": "Portal de facturación",
+          "description": "Emisión de comprobantes electrónicos",
+          "url": "https://facturador.example.com/portal",
+          "tags": [
+            "local",
+            "sri"
+          ],
+          "pinned": true,
+          "cover": {
+            "kind": "svg",
+            "src": "covers/billing.svg"
+          },
+          "health": {
+            "url": "http://127.0.0.1:PORT"
+          },
+          "icon": "tambo:billing"
+        },
+        {
+          "id": "facturador-inicio",
+          "name": "Presentación",
+          "url": "https://facturador.example.com/",
+          "tags": [
+            "local"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "svg",
+            "src": "covers/presentation.svg"
+          },
+          "health": {
+            "url": "http://127.0.0.1:PORT"
+          },
+          "icon": "tambo:presentation"
+        },
+        {
+          "id": "facturador-docs",
+          "name": "Documentación",
+          "description": "Guías y contrato de la API",
+          "url": "https://facturador.example.com/docs/introduccion",
+          "tags": [
+            "local",
+            "docs"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "svg",
+            "src": "covers/api-docs.svg"
+          },
+          "health": {
+            "url": "http://127.0.0.1:PORT"
+          },
+          "icon": "tambo:api-docs"
+        },
+        {
+          "id": "facturador-api",
+          "name": "API para ERP (OpenAPI)",
+          "description": "Especificación para integraciones",
+          "url": "https://facturador.example.com/openapi.json",
+          "tags": [
+            "local",
+            "erp"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "svg",
+            "src": "covers/openapi.svg"
+          },
+          "health": {
+            "url": "http://127.0.0.1:PORT"
+          },
+          "icon": "tambo:openapi"
+        }
+      ]
+    }
+  ]
+}

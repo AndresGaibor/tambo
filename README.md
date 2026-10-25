@@ -41,12 +41,12 @@ docker compose up -d
 
 ```bash
 cd app
-pnpm install
-pnpm dev        # espera ../data/apps.json
-pnpm check      # formato, lint y tipos
-pnpm test       # vitest
-pnpm build
-pnpm icons      # regenera los PNG de la PWA (sharp)
+bun install
+bun run dev        # espera ../data/apps.json
+bun run check      # formato, lint y tipos
+bun run test       # vitest
+bun run build
+bun run icons      # regenera los PNG de la PWA (sharp)
 ```
 
 ## API interna
