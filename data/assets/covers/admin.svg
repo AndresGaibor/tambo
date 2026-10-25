@@ -1,1 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" role="img" aria-labelledby="title"><title id="title">Administración: ilustración de portada</title><rect width="720" height="240" fill="#11151C"/><g color="#F5B83D" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M336 38 268 62v56c0 44 68 83 68 83s68-39 68-83V62Z" fill="#1D2025" stroke="currentColor"/><path d="m316 113 7 7 14-16" fill="none" stroke="currentColor"/><circle cx="443" cy="107" r="23" fill="#171B23"/><path d="m443 130v55m0-18h18m-18-20h12" fill="none" stroke="currentColor"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" role="img">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#161A23"/><stop offset="1" stop-color="#0F1218"/></linearGradient>
+<radialGradient id="g-F5B83D" cx="0.72" cy="0.9" r="0.85"><stop offset="0" stop-color="#F5B83D" stop-opacity="0.16"/><stop offset="0.55" stop-color="#F5B83D" stop-opacity="0.05"/><stop offset="1" stop-color="#F5B83D" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="720" height="240" fill="url(#bg)"/>
+<rect width="720" height="240" fill="url(#g-F5B83D)"/>
+<path d="M60 194 H 660" stroke="#4A5164" stroke-opacity="0.55" stroke-width="1.5" stroke-linecap="round"/>
+<g fill="none" stroke="#F5B83D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<g fill="none" stroke="#F5B83D" stroke-width="3" stroke-opacity="1.0" stroke-linecap="round" stroke-linejoin="round">
+<path d="M 340 66 L 400 84 L 400 128 Q 400 166 340 188 Q 280 166 280 128 L 280 84 Z"/>
+<path d="M 340 78 L 388 92 L 388 126 Q 388 156 340 176 Q 292 156 292 126 L 292 92 Z"/>
+<path d="M 340 78 L 388 92 L 388 126 Q 388 156 340 176 Q 292 156 292 126 L 292 92 Z" fill="#F5B83D" fill-opacity="0.08"/>
+<path d="M 322 128 L 336 142 L 360 112"/>
+<rect x="452" y="92" width="150" height="26" rx="13"/>
+<circle cx="486" cy="105" r="9"/>
+<rect x="452" y="136" width="150" height="26" rx="13"/>
+<circle cx="568" cy="149" r="9"/>
+<circle cx="508" cy="108" r="12"/>
+<line x1="518" y1="116" x2="546" y2="144"/>
+<line x1="538" y1="152" x2="546" y2="144"/>
+<line x1="532" y1="138" x2="540" y2="130"/>
+</g>
+</g>
+<path d="M 262 70 Q 262 78 270 78 Q 262 78 262 86 Q 262 78 254 78 Q 262 78 262 70" fill="#2DD4BF" fill-opacity="0.85" stroke="none"/>
+</svg>

@@ -1,1 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" role="img" aria-labelledby="title"><title id="title">Contrato OpenAPI: ilustración de portada</title><rect width="720" height="240" fill="#11151C"/><g color="#A79AFF" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="284" y="32" width="151" height="176" rx="8" fill="#171B23"/><path d="M308 61h103M314 87h-12v59h12m92-59h12v59h-12M330 102h48m-48 26h48M308 177h70M208 83h76m151 70h76"/><rect x="185" y="72" width="23" height="23" rx="4" fill="#171B23"/><rect x="511" y="142" width="23" height="23" rx="4" fill="#171B23"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" role="img">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#161A23"/><stop offset="1" stop-color="#0F1218"/></linearGradient>
+<radialGradient id="g-818CF8" cx="0.72" cy="0.9" r="0.85"><stop offset="0" stop-color="#818CF8" stop-opacity="0.16"/><stop offset="0.55" stop-color="#818CF8" stop-opacity="0.05"/><stop offset="1" stop-color="#818CF8" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="720" height="240" fill="url(#bg)"/>
+<rect width="720" height="240" fill="url(#g-818CF8)"/>
+<path d="M60 194 H 660" stroke="#4A5164" stroke-opacity="0.55" stroke-width="1.5" stroke-linecap="round"/>
+<g fill="none" stroke="#818CF8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<g fill="none" stroke="#818CF8" stroke-width="3" stroke-opacity="1.0" stroke-linecap="round" stroke-linejoin="round">
+<rect x="320" y="60" width="150" height="130" rx="12"/>
+<rect x="320" y="60" width="150" height="130" rx="12" fill="#818CF8" fill-opacity="0.06"/>
+<path d="M 348 92 L 336 104 L 336 116 L 328 124 L 336 132 L 336 144 L 348 156"/>
+<path d="M 372 92 L 384 104 L 384 116 L 392 124 L 384 132 L 384 144 L 372 156"/>
+<line x1="342" y1="124" x2="356" y2="124"/>
+<line x1="410" y1="84" x2="454" y2="84"/>
+<line x1="410" y1="100" x2="444" y2="100"/>
+<line x1="410" y1="120" x2="452" y2="120"/>
+<line x1="410" y1="138" x2="452" y2="138"/>
+<line x1="410" y1="156" x2="452" y2="156"/>
+<circle cx="500" cy="108" r="14"/>
+<line x1="510" y1="118" x2="538" y2="146"/>
+<line x1="530" y1="154" x2="538" y2="146"/>
+<line x1="524" y1="140" x2="532" y2="132"/>
+<circle cx="504" cy="108" r="4"/>
+</g>
+</g>
+<path d="M 588 66 Q 588 74 596 74 Q 588 74 588 82 Q 588 74 580 74 Q 588 74 588 66" fill="#F5B83D" fill-opacity="0.85" stroke="none"/>
+</svg>

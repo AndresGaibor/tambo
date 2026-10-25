@@ -1,1 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" role="img" aria-labelledby="title"><title id="title">ERP contable: ilustración de portada</title><rect width="720" height="240" fill="#11151C"/><g color="#F5B83D" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="230" y="43" width="164" height="154" rx="8" fill="#171B23" stroke="currentColor"/><path d="M250 72h122M250 101h122M250 130h122M250 159h122M285 72v105M338 72v105" fill="none" stroke="currentColor"/><rect x="418" y="76" width="86" height="121" rx="8" fill="#171B23" stroke="currentColor"/><rect x="434" y="92" width="54" height="24" rx="3" fill="#24251F" stroke="currentColor"/><rect x="434" y="132" width="12" height="12" rx="2" fill="none" stroke="currentColor"/><rect x="454" y="132" width="12" height="12" rx="2" fill="none" stroke="currentColor"/><rect x="474" y="132" width="12" height="12" rx="2" fill="none" stroke="currentColor"/><rect x="434" y="152" width="12" height="12" rx="2" fill="none" stroke="currentColor"/><rect x="454" y="152" width="12" height="12" rx="2" fill="none" stroke="currentColor"/><rect x="474" y="152" width="12" height="12" rx="2" fill="none" stroke="currentColor"/><rect x="434" y="172" width="12" height="12" rx="2" fill="none" stroke="currentColor"/><rect x="454" y="172" width="12" height="12" rx="2" fill="none" stroke="currentColor"/><rect x="474" y="172" width="12" height="12" rx="2" fill="none" stroke="currentColor"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" role="img">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#161A23"/><stop offset="1" stop-color="#0F1218"/></linearGradient>
+<radialGradient id="g-F5B83D" cx="0.72" cy="0.9" r="0.85"><stop offset="0" stop-color="#F5B83D" stop-opacity="0.16"/><stop offset="0.55" stop-color="#F5B83D" stop-opacity="0.05"/><stop offset="1" stop-color="#F5B83D" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="720" height="240" fill="url(#bg)"/>
+<rect width="720" height="240" fill="url(#g-F5B83D)"/>
+<path d="M60 194 H 660" stroke="#4A5164" stroke-opacity="0.55" stroke-width="1.5" stroke-linecap="round"/>
+<g fill="none" stroke="#F5B83D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<g fill="none" stroke="#F5B83D" stroke-width="3" stroke-opacity="1.0" stroke-linecap="round" stroke-linejoin="round">
+<rect x="300" y="58" width="150" height="100" rx="14"/>
+<rect x="314" y="72" width="122" height="44" rx="8"/>
+<rect x="314" y="72" width="122" height="44" rx="8" fill="#F5B83D" fill-opacity="0.10"/>
+<line x1="324" y1="84" x2="380" y2="84"/>
+<line x1="324" y1="96" x2="366" y2="96"/>
+<line x1="324" y1="108" x2="392" y2="108"/>
+<circle cx="328" cy="136" r="5"/>
+<circle cx="358" cy="136" r="5"/>
+<circle cx="388" cy="136" r="5"/>
+<circle cx="418" cy="136" r="5"/>
+<rect x="310" y="164" width="130" height="30" rx="8"/>
+<line x1="375" y1="164" x2="375" y2="194"/>
+<circle cx="390" cy="179" r="4"/>
+<path d="M 455 70 L 515 70 L 515 150 L 500 140 L 485 152 L 470 140 L 455 150 Z"/>
+<line x1="467" y1="86" x2="503" y2="86"/>
+<line x1="467" y1="102" x2="503" y2="102"/>
+<line x1="467" y1="118" x2="503" y2="118"/>
+<line x1="467" y1="134" x2="503" y2="134"/>
+<ellipse cx="560" cy="186" rx="24" ry="8"/>
+<ellipse cx="560" cy="174" rx="24" ry="8"/>
+<ellipse cx="560" cy="162" rx="24" ry="8"/>
+</g>
+</g>
+<path d="M 640 62 Q 640 70 648 70 Q 640 70 640 78 Q 640 70 632 70 Q 640 70 640 62" fill="#2DD4BF" fill-opacity="0.85" stroke="none"/>
+</svg>

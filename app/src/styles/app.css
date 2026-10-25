@@ -778,6 +778,18 @@ kbd {
   aspect-ratio: 16 / 5;
 }
 
+/* Ilustraciones funcionales 3:1: banda a su proporción exacta, sin recorte.
+   Una captura real (16:10) sigue mostrándose completa. */
+.card-covers .card-cover:has(.cover-band) {
+  aspect-ratio: 3 / 1;
+}
+
+.card-covers .cover-band {
+  object-fit: contain;
+  object-position: center;
+  background: #12151c;
+}
+
 .cover-img,
 .cover-auto {
   width: 100%;

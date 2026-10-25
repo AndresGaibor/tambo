@@ -1,1 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" role="img" aria-labelledby="title"><title id="title">Documentación: ilustración de portada</title><rect width="720" height="240" fill="#11151C"/><g color="#A79AFF" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M360 62c-40-24-87-22-130-6v131c43-16 90-18 130 6 40-24 87-22 130-6V56c-43-16-90-18-130 6Z" fill="#171B23" stroke="currentColor"/><path d="M360 62v131M250 83h72m-72 24h58m-58 24h72m-72 24h44m105-49-16 17 16 17m47-34 16 17-16 17m-16-43-12 52" fill="none" stroke="currentColor"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" role="img">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#161A23"/><stop offset="1" stop-color="#0F1218"/></linearGradient>
+<radialGradient id="g-818CF8" cx="0.72" cy="0.9" r="0.85"><stop offset="0" stop-color="#818CF8" stop-opacity="0.16"/><stop offset="0.55" stop-color="#818CF8" stop-opacity="0.05"/><stop offset="1" stop-color="#818CF8" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="720" height="240" fill="url(#bg)"/>
+<rect width="720" height="240" fill="url(#g-818CF8)"/>
+<path d="M60 194 H 660" stroke="#4A5164" stroke-opacity="0.55" stroke-width="1.5" stroke-linecap="round"/>
+<g fill="none" stroke="#818CF8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<g fill="none" stroke="#818CF8" stroke-width="3" stroke-opacity="1.0" stroke-linecap="round" stroke-linejoin="round">
+<path d="M 372 72 Q 360 64 344 68 L 306 78 L 306 178 L 344 168 Q 360 164 372 172 Q 384 164 400 168 L 438 178 L 438 78 L 400 68 Q 384 64 372 72 Z"/>
+<line x1="372" y1="72" x2="372" y2="172"/>
+<line x1="326" y1="100" x2="358" y2="100"/>
+<line x1="388" y1="100" x2="422" y2="100"/>
+<line x1="326" y1="120" x2="358" y2="120"/>
+<line x1="388" y1="120" x2="422" y2="120"/>
+<line x1="326" y1="140" x2="358" y2="140"/>
+<line x1="388" y1="140" x2="422" y2="140"/>
+<path d="M 486 96 L 476 106 L 476 118 L 466 128 L 476 138 L 476 150 L 486 160"/>
+<path d="M 516 96 L 526 106 L 526 118 L 536 128 L 526 138 L 526 150 L 516 160"/>
+<line x1="470" y1="128" x2="490" y2="128"/>
+<path d="M 568 92 L 596 92 L 596 168 L 582 156 L 568 168 Z"/>
+</g>
+</g>
+<path d="M 612 70 Q 612 78 620 78 Q 612 78 612 86 Q 612 78 604 78 Q 612 78 612 70" fill="#F5B83D" fill-opacity="0.85" stroke="none"/>
+</svg>

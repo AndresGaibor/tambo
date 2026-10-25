@@ -24,8 +24,17 @@ export function Cover({
 
   if ((cover.kind === "shot" || cover.kind === "svg" || cover.kind === "image") && !failed) {
     const src = cover.kind === "shot" ? `/shots/${app.id}.webp` : `/assets/${cover.src}`;
+    // Las ilustraciones 3:1 del kit van como banda a su proporción exacta;
+    // una captura real (16:10) se muestra completa.
+    const band = cover.kind === "svg" && cover.src.startsWith("covers/");
     return (
-      <img className="cover-img" src={src} alt="" loading="lazy" onError={() => setFailed(true)} />
+      <img
+        className={`cover-img${band ? " cover-band" : ""}`}
+        src={src}
+        alt=""
+        loading="lazy"
+        onError={() => setFailed(true)}
+      />
     );
   }
 
