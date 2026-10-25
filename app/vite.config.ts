@@ -22,10 +22,13 @@ export default defineConfig({
     port,
     strictPort: true,
     allowedHosts,
-    hmr: hmrClientPort ? { clientPort: hmrClientPort } : undefined,
+    hmr: hmrClientPort ? { clientPort: hmrClientPort, overlay: false } : { overlay: false },
   },
   cacheDir: "/tmp/vite-tambo",
   fmt: {},
+  build: {
+    sourcemap: false,
+  },
   lint: {
     jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
     rules: { "vite-plus/prefer-vite-plus-imports": "error" },

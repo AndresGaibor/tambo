@@ -1,10 +1,10 @@
 import { useState, type CSSProperties, type MouseEvent } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Info, MoreHorizontal, Power } from "lucide-react";
+import { GripVertical, Info, MoreHorizontal, Power, Cpu, HardDrive } from "lucide-react";
 import type { AppEntry, Group, GroupColor } from "../schema";
 import { useStore, type ViewMode } from "../store";
-import { envOf, statusVar, statusWord } from "../lib/format";
+import { envOf, statusVar, statusWord, fmtBytes, fmtCpu } from "../lib/format";
 import { Cover } from "./Cover";
 import { AppIdentity } from "./AppIdentity";
 
@@ -151,6 +151,30 @@ export function AppCard({
           {app.description && <span className="card-desc">{app.description}</span>}
           {/* Pie común alineado al fondo: la descripción nunca lo desplaza. */}
           <span className="compact-foot">
+            {service && service.memoryBytes != null && !service.shared && (
+              <span className="compact-resources" title="RAM y CPU de la unidad systemd">
+                <span className="resource-item">
+                  <HardDrive size={12} strokeWidth={1.75} />
+                  {fmtBytes(service.memoryBytes)}
+                </span>
+                <span className="resource-sep" aria-hidden="true">
+                  ·
+                </span>
+                <span className="resource-item">
+                  <Cpu size={12} strokeWidth={1.75} />
+                  {fmtCpu(service.cpuPercent)}%
+                </span>
+              </span>
+            )}
+            {service?.shared && (
+              <span
+                className="compact-resources shared"
+                title={`Unidad ${app.service} compartida con ${service.shared} apps`}
+              >
+                <Cpu size={12} strokeWidth={1.75} />
+                Compartida ({service.shared})
+              </span>
+            )}
             {env && (
               <span className="chip" data-tag={env}>
                 {env}

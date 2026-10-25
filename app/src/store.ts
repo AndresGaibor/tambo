@@ -37,6 +37,18 @@ function readStored<T extends string>(key: string, allowed: readonly T[], fallba
   return (allowed as readonly string[]).includes(raw) ? raw : fallback;
 }
 
+// Historial para sparklines (últimos 60 muestras ≈ 15 min a 15s)
+const HISTORY_MAX = 60;
+
+type HistoryPoint = {
+  ts: number;
+  cpuPercent: number | null;
+  memoryUsedBytes: number;
+  memoryTotalBytes: number;
+  load1: number;
+  services: Record<string, ServiceEntry>;
+};
+
 type TamboState = {
   config: TamboConfig | null;
   etag: string | null;
@@ -63,6 +75,10 @@ type TamboState = {
   view: ViewMode;
   /** Atajos globales e, t y 1-9; siempre se respetan / y Cmd+K. */
   shortcuts: boolean;
+
+  // Historial temporal para sparklines
+  history: HistoryPoint[];
+  addHistoryPoint: (point: HistoryPoint) => void;
 
   applyConfig: (config: TamboConfig, etag: string) => void;
   load: () => Promise<void>;
@@ -106,6 +122,14 @@ export const useStore = create<TamboState>((set, get) => ({
   theme: readStored<ThemeMode>("tambo.theme", ["dark", "light", "system"], "system"),
   view: readStored<ViewMode>("tambo.view", ["compact", "covers"], "compact"),
   shortcuts: readJson<boolean>("tambo.shortcuts", true),
+  history: [],
+
+  addHistoryPoint: (point) =>
+    set((state) => {
+      const next = [...state.history, point];
+      if (next.length > HISTORY_MAX) next.shift();
+      return { history: next };
+    }),
 
   applyConfig: (config, etag) => {
     set({
@@ -159,7 +183,20 @@ export const useStore = create<TamboState>((set, get) => ({
         services: Record<string, ServiceEntry>;
         machine: MachineStats | null;
       };
-      set({ services: body.services, machine: body.machine, online: true });
+      const now = Date.now();
+      const point: HistoryPoint = {
+        ts: now,
+        cpuPercent: body.machine?.cpuPercent ?? null,
+        memoryUsedBytes: body.machine?.memoryUsedBytes ?? 0,
+        memoryTotalBytes: body.machine?.memoryTotalBytes ?? 0,
+        load1: body.machine?.load1 ?? 0,
+        services: body.services,
+      };
+      set((state) => {
+        const next = [...state.history, point];
+        if (next.length > HISTORY_MAX) next.shift();
+        return { services: body.services, machine: body.machine, online: true, history: next };
+      });
     } catch {
       set({ online: false });
     }

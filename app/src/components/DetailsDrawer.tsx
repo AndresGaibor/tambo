@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Copy, Power, X } from "lucide-react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { Copy, Power, X, HardDrive, Cpu, Users, Calculator } from "lucide-react";
 import type { CSSProperties } from "react";
 import { findApp } from "../schema";
 import { useStore } from "../store";
@@ -55,6 +55,25 @@ export function DetailsDrawer() {
       // sin permiso de portapapeles no hay nada más que hacer
     }
   };
+
+  // Calcular desglose estimado para unidades compartidas
+  const sharedBreakdown = useMemo(() => {
+    if (!service?.shared || service.shared <= 1 || !service.memoryBytes) return null;
+    const count = service.shared;
+    const memPerApp = Math.round(service.memoryBytes / count);
+    const cpuPerApp = service.cpuPercent ? service.cpuPercent / count : 0;
+    // Buscar qué apps comparten esta unidad
+    const sharedApps =
+      config?.groups.flatMap((g) => g.apps).filter((a) => a.service === app.service) ?? [];
+    return {
+      count,
+      totalMem: service.memoryBytes,
+      totalCpu: service.cpuPercent ?? 0,
+      memPerApp,
+      cpuPerApp,
+      sharedApps: sharedApps.map((a) => a.name),
+    };
+  }, [service, config]);
 
   return (
     <>
@@ -147,20 +166,79 @@ export function DetailsDrawer() {
               <dl className="server-pop-grid">
                 <dt>RAM</dt>
                 <dd>
-                  {fmtBytes(service.memoryBytes ?? 0)} (memoria anónima del cgroup de la unidad)
+                  <div className="resource-row">
+                    <HardDrive size={14} strokeWidth={1.75} />
+                    <span>{fmtBytes(service.memoryBytes ?? 0)}</span>
+                    <span className="resource-hint">memoria anónima del cgroup</span>
+                  </div>
                 </dd>
                 <dt>CPU</dt>
                 <dd>
-                  {fmtCpu(service.cpuPercent)}% del total de la VM (4 núcleos), promediado entre
-                  muestreos de 15 s
+                  <div className="resource-row">
+                    <Cpu size={14} strokeWidth={1.75} />
+                    <span>{fmtCpu(service.cpuPercent)}%</span>
+                    <span className="resource-hint">del total de la VM (4 núcleos)</span>
+                  </div>
                 </dd>
               </dl>
             ) : service?.shared ? (
-              <p className="details-value details-muted">
-                No disponible por app: la unidad <code>{app.service}</code> sirve a {service.shared}{" "}
-                apps y sus contadores son del conjunto. El total aparece en Servidor OCI, en el
-                encabezado.
-              </p>
+              <>
+                <p className="details-value details-muted">
+                  No disponible por app: la unidad <code>{app.service}</code> sirve a{" "}
+                  {service.shared} apps y sus contadores son del conjunto. El total aparece en
+                  Servidor OCI, en el encabezado.
+                </p>
+                {sharedBreakdown && (
+                  <details className="shared-breakdown" open>
+                    <summary>
+                      <Users size={14} strokeWidth={1.75} />
+                      Desglose estimado por app ({sharedBreakdown.count} apps)
+                      <Calculator size={13} strokeWidth={1.75} />
+                    </summary>
+                    <dl className="shared-breakdown-grid">
+                      <dt>Total unidad</dt>
+                      <dd className="total-row">
+                        <span>
+                          <HardDrive size={13} strokeWidth={1.5} />
+                          {fmtBytes(sharedBreakdown.totalMem)}
+                        </span>
+                        <span>
+                          <Cpu size={13} strokeWidth={1.5} />
+                          {sharedBreakdown.totalCpu > 0
+                            ? fmtCpu(sharedBreakdown.totalCpu) + "%"
+                            : "—"}
+                        </span>
+                      </dd>
+                      <dt>Por app (reparto equitativo estimado)</dt>
+                      <dd className="per-app-row">
+                        <span>
+                          <HardDrive size={13} strokeWidth={1.5} />
+                          {fmtBytes(sharedBreakdown.memPerApp)} c/u
+                        </span>
+                        <span>
+                          <Cpu size={13} strokeWidth={1.5} />
+                          {sharedBreakdown.cpuPerApp > 0
+                            ? fmtCpu(sharedBreakdown.cpuPerApp) + "% c/u"
+                            : "—"}
+                        </span>
+                      </dd>
+                      <dt>Apps en esta unidad</dt>
+                      <dd className="apps-list">
+                        {sharedBreakdown.sharedApps.map((name, i) => (
+                          <span key={i} className="app-tag">
+                            {name}
+                          </span>
+                        ))}
+                      </dd>
+                    </dl>
+                    <p className="breakdown-note">
+                      <em>Nota:</em> Los cgroups no distinguen entre procesos de distintas apps en
+                      la misma unidad. El reparto equitativo es una estimación; el consumo real
+                      puede variar según la carga de cada app.
+                    </p>
+                  </details>
+                )}
+              </>
             ) : (
               <p className="details-value details-muted">No disponible.</p>
             )}

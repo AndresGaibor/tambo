@@ -10,6 +10,16 @@ import {
   Server,
   Sun,
   X,
+  HardDrive,
+  Cpu,
+  Activity,
+  AlertTriangle,
+  Download,
+  Zap,
+  TrendingUp,
+  Minimize2,
+  Maximize2,
+  Users,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useStore, type ViewMode } from "../store";
@@ -198,6 +208,10 @@ function MachinePanel({
   const machine = useStore((s) => s.machine);
   const services = useStore((s) => s.services);
   const healthUpdatedAt = useStore((s) => s.healthUpdatedAt);
+  const history = useStore((s) => s.history);
+
+  const [expandedServices, setExpandedServices] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const onDown = (event: MouseEvent) => {
@@ -224,38 +238,424 @@ function MachinePanel({
   const unidades = Object.values(services).filter((entry) => entry.memoryBytes != null);
   const compartidas = unidades.filter((entry) => (entry.shared ?? 1) > 1).length;
 
+  // Cálculo de porcentajes para barras de progreso
+  const ramPercent = machine
+    ? Math.min(100, Math.round((machine.memoryUsedBytes / machine.memoryTotalBytes) * 100))
+    : 0;
+  const cpuPercent = machine ? Math.min(100, Math.round(machine.cpuPercent ?? 0)) : 0;
+  const loadPercent = machine
+    ? Math.min(100, Math.round((machine.load1 / machine.cores) * 100))
+    : 0;
+
+  // Colores semánticos según uso
+  const getUsageColor = (percent: number) => {
+    if (percent >= 80) return "var(--down)";
+    if (percent >= 60) return "var(--warn)";
+    return "var(--ok)";
+  };
+
+  const ramColor = getUsageColor(ramPercent);
+  const cpuColor = getUsageColor(cpuPercent);
+  const loadColor = getUsageColor(loadPercent);
+
+  // Preparar datos para sparklines (últimos 30 puntos)
+  const sparklinePoints = useMemo(() => {
+    return history.slice(-30).map((p, i) => ({
+      x: i,
+      cpu: p.cpuPercent ?? 0,
+      ram: p.memoryTotalBytes > 0 ? Math.round((p.memoryUsedBytes / p.memoryTotalBytes) * 100) : 0,
+      load:
+        p.memoryTotalBytes > 0
+          ? Math.min(100, Math.round((p.load1 / (p.memoryTotalBytes > 0 ? 4 : 4)) * 100))
+          : 0,
+    }));
+  }, [history]);
+
+  // Función para generar path SVG del sparkline
+  const generateSparklinePath = (
+    points: { x: number; cpu: number; ram: number; load: number }[],
+    metric: "cpu" | "ram" | "load",
+  ) => {
+    if (points.length < 2) return "";
+    const width = 120;
+    const height = 30;
+    const padding = 2;
+    const xScale = (width - 2 * padding) / Math.max(1, points.length - 1);
+
+    return points
+      .map((p, i) => {
+        const x = padding + i * xScale;
+        const y = height - padding - (p[metric] / 100) * (height - 2 * padding);
+        return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+      })
+      .join(" ");
+  };
+
+  const cpuPath = generateSparklinePath(sparklinePoints, "cpu");
+  const ramPath = generateSparklinePath(sparklinePoints, "ram");
+  const loadPath = generateSparklinePath(sparklinePoints, "load");
+
+  // Total memory and CPU across all services
+  const totalServiceMem = Object.values(services).reduce((sum, s) => sum + (s.memoryBytes ?? 0), 0);
+  const totalServiceCpu = Object.values(services).reduce((sum, s) => sum + (s.cpuPercent ?? 0), 0);
+
+  // Export CSV
+  const handleExport = () => {
+    setExporting(true);
+    const rows = [
+      [
+        "timestamp",
+        "cpu_percent",
+        "ram_used_bytes",
+        "ram_total_bytes",
+        "load1",
+        "unit",
+        "memory_bytes",
+        "cpu_percent",
+      ],
+      ...history.flatMap((p) =>
+        Object.entries(p.services)
+          .filter(([, s]) => s.memoryBytes != null)
+          .map(([unit, s]) => [
+            new Date(p.ts).toISOString(),
+            p.cpuPercent ?? "",
+            p.memoryUsedBytes,
+            p.memoryTotalBytes,
+            p.load1.toFixed(2),
+            unit,
+            s.memoryBytes ?? "",
+            s.cpuPercent ?? "",
+          ]),
+      ),
+    ];
+    const csv = rows.map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tambo-resources-${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExporting(false);
+  };
+
   return (
     <div className="menu server-pop" role="dialog" aria-label="Recursos del servidor" ref={ref}>
-      <p className="server-pop-title">Servidor OCI</p>
+      <header className="server-pop-header">
+        <div className="server-pop-header-content">
+          <Activity size={18} strokeWidth={1.75} className="server-pop-icon" />
+          <div>
+            <p className="server-pop-title">Servidor OCI</p>
+            <p className="server-pop-subtitle">
+              VM oci · {machine?.cores ?? 4} núcleos · {fmtBytes(machine?.memoryTotalBytes ?? 0)}{" "}
+              totales
+            </p>
+          </div>
+        </div>
+        <div className="server-pop-header-actions">
+          <button
+            type="button"
+            className="btn btn-icon btn-ghost server-pop-action"
+            onClick={handleExport}
+            aria-label="Exportar CSV"
+            disabled={exporting}
+            title="Exportar historial CSV"
+          >
+            <Download size={14} strokeWidth={1.75} />
+          </button>
+          <button
+            type="button"
+            className="btn btn-icon btn-ghost server-pop-close"
+            onClick={onClose}
+            aria-label="Cerrar"
+          >
+            <X size={14} strokeWidth={1.75} />
+          </button>
+        </div>
+      </header>
+
       {machine ? (
         <>
-          <dl className="server-pop-grid">
-            <dt>CPU</dt>
-            <dd>
-              {fmtCpu(machine.cpuPercent)}% de {machine.cores} núcleos
-            </dd>
-            <dt>RAM</dt>
-            <dd>
-              {fmtBytes(machine.memoryUsedBytes)} de {fmtBytes(machine.memoryTotalBytes)}
-            </dd>
-            <dt>Carga</dt>
-            <dd>{machine.load1.toFixed(2)}</dd>
-          </dl>
-          <p className="server-pop-note">
-            CPU: porcentaje del total de la máquina ({machine.cores} núcleos), medido por delta
-            entre muestreos de 15 s. RAM: memoria usada del total. Origen: contadores de systemd y
-            cgroups del host de la VM; no incluye el MacBook. Actualizado {agoOf(healthUpdatedAt)} (
-            {clockOf(healthUpdatedAt)}).
-          </p>
-          {compartidas > 0 && (
-            <p className="server-pop-note">
-              {compartidas} unidad(es) sirven a varias apps: su memoria y CPU son del conjunto y no
-              se atribuyen a cada app individual.
-            </p>
+          <div className="server-pop-metrics">
+            {/* CPU Metric with Sparkline */}
+            <div
+              className="metric-card"
+              style={{ "--metric-color": cpuColor } as React.CSSProperties}
+            >
+              <div className="metric-header">
+                <div className="metric-label">
+                  <Cpu size={14} strokeWidth={1.75} />
+                  <span>CPU</span>
+                </div>
+                <span className="metric-value" style={{ color: cpuColor }}>
+                  {fmtCpu(machine.cpuPercent)}%
+                </span>
+              </div>
+              <div className="metric-sparkline">
+                <svg width="120" height="30" viewBox="0 0 120 30" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="cpuGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={cpuColor} stopOpacity="0.3" />
+                      <stop offset="100%" stopColor={cpuColor} stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {cpuPath && (
+                    <>
+                      <path d={`${cpuPath} L 118 28 L 2 28 Z`} fill="url(#cpuGradient)" />
+                      <path
+                        d={cpuPath}
+                        stroke={cpuColor}
+                        strokeWidth="1.5"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </>
+                  )}
+                </svg>
+              </div>
+              <div className="metric-bar-track">
+                <div
+                  className="metric-bar"
+                  style={{
+                    width: `${cpuPercent}%`,
+                    backgroundColor: cpuColor,
+                  }}
+                />
+              </div>
+              <p className="metric-detail">
+                {fmtCpu(machine.cpuPercent)}% de {machine.cores} núcleos · Carga:{" "}
+                {machine.load1.toFixed(2)}
+                {totalServiceCpu > 0 && <span> · Servicios: {fmtCpu(totalServiceCpu)}%</span>}
+              </p>
+            </div>
+
+            {/* RAM Metric with Sparkline */}
+            <div
+              className="metric-card"
+              style={{ "--metric-color": ramColor } as React.CSSProperties}
+            >
+              <div className="metric-header">
+                <div className="metric-label">
+                  <HardDrive size={14} strokeWidth={1.75} />
+                  <span>RAM</span>
+                </div>
+                <span className="metric-value" style={{ color: ramColor }}>
+                  {fmtBytes(machine.memoryUsedBytes)} / {fmtBytes(machine.memoryTotalBytes)}
+                </span>
+              </div>
+              <div className="metric-sparkline">
+                <svg width="120" height="30" viewBox="0 0 120 30" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="ramGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={ramColor} stopOpacity="0.3" />
+                      <stop offset="100%" stopColor={ramColor} stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {ramPath && (
+                    <>
+                      <path d={`${ramPath} L 118 28 L 2 28 Z`} fill="url(#ramGradient)" />
+                      <path
+                        d={ramPath}
+                        stroke={ramColor}
+                        strokeWidth="1.5"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </>
+                  )}
+                </svg>
+              </div>
+              <div className="metric-bar-track">
+                <div
+                  className="metric-bar"
+                  style={{
+                    width: `${ramPercent}%`,
+                    backgroundColor: ramColor,
+                  }}
+                />
+              </div>
+              <p className="metric-detail">
+                {fmtBytes(machine.memoryUsedBytes)} de {fmtBytes(machine.memoryTotalBytes)} (
+                {ramPercent}%)
+                {totalServiceMem > 0 && <span> · Servicios: {fmtBytes(totalServiceMem)}</span>}
+              </p>
+            </div>
+
+            {/* Load Metric with Sparkline */}
+            <div
+              className="metric-card"
+              style={{ "--metric-color": loadColor } as React.CSSProperties}
+            >
+              <div className="metric-header">
+                <div className="metric-label">
+                  <Activity size={14} strokeWidth={1.75} />
+                  <span>Carga</span>
+                </div>
+                <span className="metric-value" style={{ color: loadColor }}>
+                  {machine.load1.toFixed(2)}
+                </span>
+              </div>
+              <div className="metric-sparkline">
+                <svg width="120" height="30" viewBox="0 0 120 30" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="loadGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={loadColor} stopOpacity="0.3" />
+                      <stop offset="100%" stopColor={loadColor} stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {loadPath && (
+                    <>
+                      <path d={`${loadPath} L 118 28 L 2 28 Z`} fill="url(#loadGradient)" />
+                      <path
+                        d={loadPath}
+                        stroke={loadColor}
+                        strokeWidth="1.5"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </>
+                  )}
+                </svg>
+              </div>
+              <div className="metric-bar-track">
+                <div
+                  className="metric-bar"
+                  style={{
+                    width: `${loadPercent}%`,
+                    backgroundColor: loadColor,
+                  }}
+                />
+              </div>
+              <p className="metric-detail">
+                Load 1m: {machine.load1.toFixed(2)} de {machine.cores} ({loadPercent}%)
+              </p>
+            </div>
+          </div>
+
+          {/* Alertas de umbral */}
+          {(cpuPercent >= 80 || ramPercent >= 80 || loadPercent >= 80) && (
+            <div className="server-pop-alerts">
+              {cpuPercent >= 80 && (
+                <div className="alert alert-critical">
+                  <Zap size={13} strokeWidth={1.75} />
+                  <span>CPU crítica: {fmtCpu(machine.cpuPercent)}%</span>
+                </div>
+              )}
+              {ramPercent >= 80 && (
+                <div className="alert alert-critical">
+                  <AlertTriangle size={13} strokeWidth={1.75} />
+                  <span>RAM crítica: {ramPercent}%</span>
+                </div>
+              )}
+              {loadPercent >= 80 && (
+                <div className="alert alert-critical">
+                  <TrendingUp size={13} strokeWidth={1.75} />
+                  <span>Carga alta: {machine.load1.toFixed(2)}</span>
+                </div>
+              )}
+              {cpuPercent >= 60 && cpuPercent < 80 && (
+                <div className="alert alert-warning">
+                  <Zap size={13} strokeWidth={1.75} />
+                  <span>CPU alta: {fmtCpu(machine.cpuPercent)}%</span>
+                </div>
+              )}
+              {ramPercent >= 60 && ramPercent < 80 && (
+                <div className="alert alert-warning">
+                  <AlertTriangle size={13} strokeWidth={1.75} />
+                  <span>RAM alta: {ramPercent}%</span>
+                </div>
+              )}
+            </div>
           )}
+
+          <div className="server-pop-details">
+            <p className="server-pop-note">
+              <strong>Origen:</strong> contadores de systemd y cgroups del host de la VM (no el
+              MacBook).
+              <br />
+              CPU: % del total de la máquina ({machine.cores} núcleos), delta entre muestreos de 15
+              s. RAM: memoria usada del total.
+              <br />
+              Actualizado {agoOf(healthUpdatedAt)} ({clockOf(healthUpdatedAt)}).
+            </p>
+            {compartidas > 0 && (
+              <p className="server-pop-note warning">
+                <AlertTriangle size={13} strokeWidth={1.75} />
+                {compartidas} unidad(es) sirven a varias apps: su memoria y CPU son del conjunto y
+                no se atribuyen a cada app individual.
+              </p>
+            )}
+            {Object.keys(services).length > 0 && (
+              <details className="server-pop-services" open={expandedServices}>
+                <summary onClick={() => setExpandedServices(!expandedServices)}>
+                  <span>Unidades con métricas ({unidades.length})</span>
+                  <span className="chevron">
+                    {expandedServices ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                  </span>
+                </summary>
+                <ul>
+                  {Object.entries(services)
+                    .filter(([, entry]) => entry.memoryBytes != null)
+                    .sort(([, a], [, b]) => (b.memoryBytes ?? 0) - (a.memoryBytes ?? 0))
+                    .map(([id, entry]) => {
+                      const mem = entry.memoryBytes ?? 0;
+                      const cpu = entry.cpuPercent ?? 0;
+                      const memPct = machine?.memoryTotalBytes
+                        ? Math.round((mem / machine.memoryTotalBytes) * 100)
+                        : 0;
+                      const cpuPct = machine?.cores ? Math.round((cpu / machine.cores) * 100) : 0;
+                      const isShared = entry.shared && entry.shared > 1;
+                      return (
+                        <li key={id}>
+                          <code>{id}</code>
+                          <span className="mem-cell">
+                            <HardDrive size={11} strokeWidth={1.5} />
+                            {fmtBytes(mem)}
+                            <span className="pct">({memPct}%)</span>
+                          </span>
+                          <span className="cpu-cell">
+                            <Cpu size={11} strokeWidth={1.5} />
+                            {fmtCpu(cpu)}%<span className="pct">({cpuPct}% total)</span>
+                          </span>
+                          {isShared && <span className="shared-badge">×{entry.shared}</span>}
+                          {isShared && (
+                            <details className="shared-unit-breakdown">
+                              <summary>
+                                <Users size={11} strokeWidth={1.5} />
+                                Desglose estimado ({entry.shared} apps)
+                              </summary>
+                              <dl className="breakdown-grid">
+                                <dt>Total</dt>
+                                <dd>
+                                  <span>{fmtBytes(mem)}</span>
+                                  <span>{cpu > 0 ? fmtCpu(cpu) + "%" : "—"}</span>
+                                </dd>
+                                <dt>Por app (estimado)</dt>
+                                <dd>
+                                  <span>{fmtBytes(Math.round(mem / (entry.shared || 1)))} c/u</span>
+                                  <span>
+                                    {cpu > 0 ? fmtCpu(cpu / (entry.shared || 1)) + "% c/u" : "—"}
+                                  </span>
+                                </dd>
+                              </dl>
+                            </details>
+                          )}
+                        </li>
+                      );
+                    })}
+                </ul>
+              </details>
+            )}
+          </div>
         </>
       ) : (
-        <p className="server-pop-note">Sin datos del servidor todavía.</p>
+        <div className="server-pop-empty">
+          <Activity size={32} strokeWidth={1.5} />
+          <p>Sin datos del servidor todavía</p>
+        </div>
       )}
     </div>
   );

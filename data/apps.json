@@ -26,7 +26,7 @@
             "src": "covers/storybook.svg"
           },
           "health": {
-            "url": "http://127.0.0.1:6006"
+            "url": "http://127.0.0.1:6007"
           },
           "service": "elcaliz-storybook.service",
           "icon": "brand:storybook.svg"
@@ -47,7 +47,7 @@
           "health": {
             "url": "http://127.0.0.1:15174"
           },
-          "service": "elcaliz-dev.service",
+          "service": "elcaliz-admin.service",
           "icon": "tambo:admin"
         },
         {
@@ -66,7 +66,7 @@
           "health": {
             "url": "http://127.0.0.1:15173"
           },
-          "service": "elcaliz-dev.service",
+          "service": "elcaliz-web.service",
           "icon": "tambo:erp"
         },
         {
@@ -85,7 +85,7 @@
           "health": {
             "url": "http://127.0.0.1:18787/salud"
           },
-          "service": "elcaliz-dev.service",
+          "service": "elcaliz-api.service",
           "icon": "tambo:api"
         },
         {
@@ -104,7 +104,7 @@
           "health": {
             "url": "http://127.0.0.1:5174"
           },
-          "service": "elcaliz-dev.service",
+          "service": "elcaliz-asistente.service",
           "icon": "tambo:assistant"
         }
       ]

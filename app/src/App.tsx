@@ -39,9 +39,13 @@ export default function App() {
     void useStore.getState().loadServices();
     const timer = setInterval(() => void useStore.getState().loadHealth(), 10_000);
     const servicesTimer = setInterval(() => void useStore.getState().loadServices(), 15_000);
+    // La configuración también se relee: si cambia apps.json a mano o por
+    // otro proceso, el mapeo app → unidad no debe quedarse obsoleto.
+    const configTimer = setInterval(() => void useStore.getState().load(), 30_000);
     return () => {
       clearInterval(timer);
       clearInterval(servicesTimer);
+      clearInterval(configTimer);
     };
   }, [load, loadHealth]);
 
@@ -50,7 +54,11 @@ export default function App() {
   useEffect(() => {
     const hot = import.meta.hot;
     if (!hot) return;
-    const onConfig = () => void useStore.getState().load();
+    const onConfig = () => {
+      void useStore.getState().load();
+      // El mapeo de unidades pudo cambiar: hay que releer los servicios.
+      void useStore.getState().loadServices();
+    };
     hot.on("tambo:config", onConfig);
     return () => hot.off("tambo:config", onConfig);
   }, []);
