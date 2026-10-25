@@ -1,0 +1,15 @@
+.env
+node_modules/
+dist/
+data/shots/
+data/apps.json.bak
+data/.apps.json.*.tmp
+.DS_Store
+
+# Tooling local de agentes (scaffolds, no parte del producto)
+.agents/
+.claude/
+.opencode/
+.pi/
+.zcode/
+openspec/
