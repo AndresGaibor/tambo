@@ -2696,3 +2696,25 @@ html {
   background: var(--accent);
   border-color: var(--accent);
 }
+
+/* Banner de modo edición */
+.edit-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  margin: 0 0 12px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: var(--radius-field);
+  font-size: 13px;
+  color: var(--text);
+}
+.edit-banner span {
+  flex: 1;
+}
+.edit-banner .btn {
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: 12px;
+}

@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Despertando…</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0b0d12;
+        color: #e8eaf0;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      @media (prefers-color-scheme: light) {
+        html,
+        body {
+          background: #f7f5f0;
+          color: #1b1d24;
+        }
+      }
+      .wrap {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 24px;
+        text-align: center;
+      }
+      .logo {
+        width: 64px;
+        height: 64px;
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.5;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.06);
+        }
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0;
+        font-weight: 600;
+      }
+      p {
+        font-size: 14px;
+        color: #8a92a6;
+        margin: 0;
+        max-width: 320px;
+      }
+      .bar {
+        width: 200px;
+        height: 4px;
+        background: #232836;
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .bar > div {
+        height: 100%;
+        width: 30%;
+        background: #f5b83d;
+        border-radius: 2px;
+        animation: slide 1.2s ease-in-out infinite;
+      }
+      @keyframes slide {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(400%);
+        }
+      }
+      .error {
+        color: #f87171;
+      }
+      .btn {
+        margin-top: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid #232836;
+        background: #12151c;
+        color: #e8eaf0;
+        cursor: pointer;
+        font: inherit;
+      }
+      @media (prefers-color-scheme: light) {
+        .bar {
+          background: #e4e0d6;
+        }
+        .bar > div {
+          background: #e0a020;
+        }
+        .btn {
+          color: #1b1d24;
+          background: #ffffff;
+          border-color: #e4e0d6;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
+        <rect width="512" height="512" rx="113" fill="#0b0d12" />
+        <path
+          fill="#F5B83D"
+          fill-rule="evenodd"
+          stroke="#F5B83D"
+          stroke-width="18"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+          d="M96 186 L96 156 L126 156 L126 126 L156 126 L156 96 L186 96 L326 96 L356 96 L356 126 L386 126 L386 156 L416 156 L416 186 L416 326 L416 356 L386 356 L386 386 L356 386 L356 416 L326 416 L186 416 L156 416 L156 386 L126 386 L126 356 L96 356 L96 326 Z M256 200 A56 56 0 1 0 256 312 A56 56 0 1 0 256 200 Z"
+        />
+      </svg>
+      <h1 id="title">Despertando…</h1>
+      <p id="status">Preparando la instancia. Esto puede tardar unos segundos.</p>
+      <div class="bar"><div></div></div>
+      <button id="retry" class="btn" style="display: none">Reintentar</button>
+    </div>
+    <script>
+      (function () {
+        const params = new URLSearchParams(location.search);
+        const url = params.get("url");
+        const health = params.get("health");
+        const name = params.get("name") || "la app";
+        const title = document.getElementById("title");
+        const status = document.getElementById("status");
+        const retry = document.getElementById("retry");
+
+        title.textContent = "Despertando " + name + "…";
+
+        let attempts = 0;
+        const maxAttempts = 60; // ~60s
+
+        async function check() {
+          attempts++;
+          try {
+            const res = await fetch(health, { mode: "no-cors", cache: "no-store" });
+            // no-cors devuelve opaque; asumimos éxito si no lanza.
+            if (attempts >= 3) {
+              status.textContent = "Ya casi está…";
+            }
+            // Intentar una petición real (puede fallar por CORS, pero intentamos).
+            try {
+              const r = await fetch(health, { cache: "no-store" });
+              if (r.ok) {
+                status.textContent = "Listo. Redirigiendo…";
+                setTimeout(() => {
+                  location.href = url;
+                }, 400);
+                return;
+              }
+            } catch {}
+            if (attempts < maxAttempts) {
+              setTimeout(check, 1000);
+            } else {
+              status.textContent = "No se pudo despertar la app.";
+              status.classList.add("error");
+              retry.style.display = "inline-block";
+            }
+          } catch {
+            if (attempts < maxAttempts) setTimeout(check, 1000);
+            else {
+              status.textContent = "No se pudo despertar la app.";
+              status.classList.add("error");
+              retry.style.display = "inline-block";
+            }
+          }
+        }
+
+        retry.addEventListener("click", () => {
+          attempts = 0;
+          status.classList.remove("error");
+          retry.style.display = "none";
+          status.textContent = "Reintentando…";
+          check();
+        });
+
+        // Dar tiempo a que Sablier arranque (el portal ya lo pidió).
+        setTimeout(check, 2000);
+      })();
+    </script>
+  </body>
+</html>
+EOF echo done

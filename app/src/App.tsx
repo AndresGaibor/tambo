@@ -17,6 +17,7 @@ import { SkeletonBoard } from "./components/SkeletonBoard";
 import { AppMenu } from "./components/AppMenu";
 import { KeyboardHelp } from "./components/KeyboardHelp";
 import { Logo } from "./components/Logo";
+import { Pencil } from "lucide-react";
 import { AppIconSprite } from "./components/AppIdentity";
 import type { MenuPoint } from "./components/AppCard";
 
@@ -28,6 +29,7 @@ export default function App() {
   const quickFilter = useStore((s) => s.quickFilter);
   const setQuickFilter = useStore((s) => s.setQuickFilter);
   const editing = useStore((s) => s.editing);
+  const setEditing = useStore((s) => s.setEditing);
   const selectedApps = useStore((s) => s.selectedApps);
   const batchPowerAction = useStore((s) => s.batchPowerAction);
   const clearSelection = useStore((s) => s.clearSelection);
@@ -267,6 +269,18 @@ export default function App() {
       </a>
       <Header />
       <ErrorBanner />
+      {editing && (
+        <div className="edit-banner" role="status">
+          <Pencil size={14} strokeWidth={1.75} />
+          <span>
+            Modo edición: arrastra tarjetas/grupos, edita con el lápiz, o haz clic en una tarjeta
+            para seleccionarla.
+          </span>
+          <button type="button" className="btn btn-accent" onClick={() => setEditing(false)}>
+            Terminar edición
+          </button>
+        </div>
+      )}
       <main id="main-content" className="main" data-view={view} tabIndex={-1}>
         {!config && !loadError && online && <SkeletonBoard />}
         {!config && (!online || !!loadError) && (

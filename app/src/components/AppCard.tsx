@@ -131,10 +131,10 @@ function AppCardImpl({
       setWaking(true);
       try {
         await powerAction(app.id, "start");
-        window.setTimeout(() => {
-          window.open(app.url, openIn === "newTab" ? "_blank" : "_self", "noopener");
-          setWaking(false);
-        }, 1_500);
+        const healthUrl = app.health?.url ?? "";
+        const wakeUrl = `/wake.html?name=${encodeURIComponent(app.name)}&url=${encodeURIComponent(app.url)}&health=${encodeURIComponent(healthUrl)}`;
+        window.open(wakeUrl, "_blank", "noopener");
+        setWaking(false);
       } catch {
         setWaking(false);
         window.open(app.url, openIn === "newTab" ? "_blank" : "_self", "noopener");

@@ -16,7 +16,7 @@
           "id": "elcaliz-storybook",
           "name": "Storybook",
           "description": "Catálogo de componentes y vistas del ERP",
-          "url": "https://sb.elcaliz.lab.andresgaibor.com",
+          "url": "https://oracle.tail4a8b59.ts.net:6006",
           "tags": [
             "dev"
           ],
@@ -35,7 +35,7 @@
           "id": "elcaliz-admin",
           "name": "Admin de plataforma",
           "description": "Organizaciones, suscripciones y accesos",
-          "url": "https://admin.elcaliz.lab.andresgaibor.com",
+          "url": "https://oracle.tail4a8b59.ts.net:15175",
           "tags": [
             "dev"
           ],
@@ -54,7 +54,7 @@
           "id": "elcaliz-erp",
           "name": "ERP contable",
           "description": "Ventas, POS, inventario y facturación",
-          "url": "https://erp.elcaliz.lab.andresgaibor.com",
+          "url": "https://oracle.tail4a8b59.ts.net:15176",
           "tags": [
             "dev"
           ],
@@ -73,7 +73,7 @@
           "id": "elcaliz-api",
           "name": "API del ERP",
           "description": "Para integrar el ERP desde otras aplicaciones",
-          "url": "https://api.elcaliz.lab.andresgaibor.com",
+          "url": "https://oracle.tail4a8b59.ts.net:18788/salud",
           "tags": [
             "dev"
           ],
@@ -92,7 +92,7 @@
           "id": "elcaliz-asistente",
           "name": "Asistente móvil",
           "description": "Chat con el ERP desde el móvil",
-          "url": "https://asistente.elcaliz.lab.andresgaibor.com",
+          "url": "https://oracle.tail4a8b59.ts.net:5176",
           "tags": [
             "dev"
           ],
@@ -118,7 +118,7 @@
           "id": "delegation-monitor",
           "name": "Monitor de delegaciones",
           "description": "Estado y bitácora de sesiones de agentes",
-          "url": "https://dmon.lab.andresgaibor.com",
+          "url": "https://oracle.tail4a8b59.ts.net:3301",
           "tags": [
             "dev",
             "personal"
@@ -138,7 +138,7 @@
           "id": "titula",
           "name": "Titula",
           "description": "Estado y validación de la documentación académica",
-          "url": "https://titula.andresgaibor.com",
+          "url": "https://oracle.tail4a8b59.ts.net:3300",
           "tags": [
             "prod"
           ],

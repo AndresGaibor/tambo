@@ -863,12 +863,12 @@ export function Header() {
         </button>
         <button
           type="button"
-          className="btn btn-ghost theme-btn"
+          className={`btn btn-ghost theme-btn${editing ? " is-editing" : ""}`}
           aria-pressed={editing}
           onClick={() => setEditing(!editing)}
         >
           <Pencil size={15} strokeWidth={1.75} />
-          <span className="btn-text">Editar</span>
+          <span className="btn-text">{editing ? "Terminar edición" : "Editar"}</span>
         </button>
         {editing && saveStatus !== "idle" && (
           <span

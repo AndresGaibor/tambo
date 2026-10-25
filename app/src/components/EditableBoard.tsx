@@ -7,6 +7,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import {
@@ -49,6 +50,29 @@ export function EditableBoard({
     setActiveId(String(event.active.id));
   };
 
+  // Mover en tiempo real al arrastrar entre grupos (mejora la sensación).
+  const onDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    const current = useStore.getState().config;
+    if (!current) return;
+    const activeData = active.data.current as SortableData | undefined;
+    const overData = over.data.current as SortableData | undefined;
+    if (activeData?.type !== "app") return;
+    const toGroupId = overData?.groupId ?? overData?.sortable?.containerId ?? null;
+    if (!toGroupId) return;
+    const fromGroupId = activeData.groupId;
+    if (fromGroupId === toGroupId) return; // mismo grupo: lo maneja onDragEnd
+    const target = current.groups.find((g) => g.id === toGroupId);
+    if (!target) return;
+    let index = target.apps.findIndex((a) => a.id === over.id);
+    if (index < 0) index = target.apps.length;
+    // Solo mover si realmente cambió de grupo.
+    if (fromGroupId !== toGroupId) {
+      void save(moveApp(current, String(active.id), toGroupId, index));
+    }
+  };
+
   const onDragEnd = (event: DragEndEvent) => {
     setActiveId(null);
     const { active, over } = event;
@@ -85,6 +109,7 @@ export function EditableBoard({
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={onDragStart}
+      onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
       <DragOverlay>{activeId ? <div className="drag-overlay">{activeId}</div> : null}</DragOverlay>
