@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Zap } from "lucide-react";
 import { useStore } from "../store";
 import { statusText, statusVar } from "../lib/format";
 import { AppIdentity } from "./AppIdentity";
@@ -14,6 +14,7 @@ export function PinnedRow({
 }) {
   const config = useStore((s) => s.config);
   const health = useStore((s) => s.health);
+  const services = useStore((s) => s.services);
   const openIn = config?.settings.openIn ?? "newTab";
   const [menuFor, setMenuFor] = useState<string | null>(null);
   if (!config) return null;
@@ -44,6 +45,11 @@ export function PinnedRow({
                 <span className="pinned-text">
                   <span className="pinned-name">{app.name}</span>
                   <span className="pinned-group">{group.name}</span>
+                  {services[app.id]?.sablier && !services[app.id]?.sablier?.sessionActive && (
+                    <span className="pinned-sablier" title="Dormida a cero por Sablier">
+                      <Zap size={10} strokeWidth={1.75} aria-hidden="true" /> Dormida
+                    </span>
+                  )}
                 </span>
                 <span
                   className="dot"

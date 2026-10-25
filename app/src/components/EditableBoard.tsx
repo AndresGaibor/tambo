@@ -1,17 +1,20 @@
 import {
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   closestCorners,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { moveApp, moveGroup } from "../lib/edit";
 import { useStore } from "../store";
@@ -34,6 +37,7 @@ export function EditableBoard({
   const config = useStore((s) => s.config);
   const save = useStore((s) => s.save);
   const openDrawer = useStore((s) => s.openDrawer);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -41,7 +45,12 @@ export function EditableBoard({
 
   if (!config) return null;
 
+  const onDragStart = (event: DragStartEvent) => {
+    setActiveId(String(event.active.id));
+  };
+
   const onDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
     const { active, over } = event;
     const current = useStore.getState().config;
     if (!current || !over || active.id === over.id) return;
@@ -72,7 +81,13 @@ export function EditableBoard({
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={onDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+    >
+      <DragOverlay>{activeId ? <div className="drag-overlay">{activeId}</div> : null}</DragOverlay>
       <p className="edit-hint">
         Modo edición: arrastra el asa de una tarjeta o grupo, o enfócala, pulsa Espacio o Enter y
         usa las flechas para moverla. También puedes abrir el menú y usar “Editar” para moverla de

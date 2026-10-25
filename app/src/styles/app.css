@@ -152,8 +152,10 @@ kbd {
   align-items: center;
   gap: 16px;
   padding: 8px 24px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
 }
 
 .header-left {
@@ -538,6 +540,15 @@ html.wco .header .menu {
   flex-direction: column;
   border-radius: var(--radius-card);
   border: 1px solid var(--border);
+  transition:
+    transform var(--dur-fast) ease-out,
+    box-shadow var(--dur-fast) ease-out,
+    border-color var(--dur-fast) ease-out;
+  .card:hover:not(.is-dragging) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: color-mix(in srgb, var(--g) 40%, var(--border));
+  }
   background: var(--surface);
   overflow: hidden;
   box-shadow: var(--shadow-card);
@@ -626,6 +637,19 @@ html.wco .header .menu {
   background: var(--status, var(--unknown));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--status, var(--unknown)) 22%, transparent);
   flex: none;
+  transition: background-color var(--dur-fast) ease-out;
+}
+[data-status="down"] .dot {
+  animation: tambo-pulse-dot 1.2s ease-in-out infinite;
+}
+@keyframes tambo-pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .status-inline {
@@ -655,8 +679,8 @@ html.wco .header .menu {
   flex-direction: column;
   align-items: stretch;
   gap: 4px;
-  padding: 12px 14px;
-  min-height: 112px;
+  padding: 10px 12px;
+  min-height: 100px;
 }
 
 .compact-head {
@@ -668,11 +692,14 @@ html.wco .header .menu {
 
 .compact-foot {
   margin-top: auto;
-  padding-top: 6px;
+  padding-top: 4px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--text-muted);
+  min-height: 18px;
 }
 
 .identity {
@@ -797,6 +824,10 @@ html.wco .header .menu {
   align-items: center;
   gap: 4px;
   border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .chip-sablier[data-tone="on"] {
@@ -1065,6 +1096,19 @@ html.wco .header .menu {
   width: 48px;
   height: 48px;
   opacity: 0.6;
+  animation: tambo-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes tambo-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
 }
 
 /* ===== Modo edición ===== */
@@ -2096,4 +2140,559 @@ html.wco .header .menu {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+}
+
+/* Sablier: indicador de error al despertar */
+.card-error {
+  color: var(--down);
+  font-size: 0.7rem;
+  margin-left: 0.4rem;
+}
+
+/* Sablier: barra de progreso de la sesión en el drawer */
+.sablier-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-2, rgba(255, 255, 255, 0.08));
+  overflow: hidden;
+  margin: 0.4rem 0 0.6rem;
+}
+.sablier-progress-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition:
+    width 0.5s linear,
+    background-color 0.3s ease;
+}
+
+/* Sablier: glow sutil en el chip cuando está en sesión */
+.chip-sablier[data-tone="on"] {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ok) 35%, transparent);
+}
+
+/* Servidor OCI: banner cuando Sablier no responde */
+.server-pop-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  color: var(--warn);
+  font-size: 0.8rem;
+}
+
+/* PinnedRow: indicador de app dormida por Sablier */
+.pinned-sablier {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--unknown);
+  margin-left: 4px;
+}
+
+/* Toasts */
+.toast-stack {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+  max-width: 320px;
+}
+.toast {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  animation: tambo-toast-in 0.2s ease;
+}
+.toast-ok {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+.toast-warn {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.toast-down {
+  border-color: var(--down);
+  color: var(--down);
+}
+.toast-info {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+@keyframes tambo-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Skeleton loading */
+.skeleton-card {
+  pointer-events: none;
+}
+.skeleton-cover {
+  aspect-ratio: 16 / 9;
+  background: var(--surface-2);
+  border-radius: 8px 8px 0 0;
+  animation: tambo-shimmer 1.4s ease-in-out infinite;
+}
+.skeleton-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  animation: tambo-shimmer 1.4s ease-in-out infinite;
+}
+.skeleton-line-title {
+  width: 70%;
+}
+.skeleton-line-desc {
+  width: 90%;
+}
+.skeleton-line-foot {
+  width: 40%;
+  height: 10px;
+}
+@keyframes tambo-shimmer {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Auto-despertar al clic en una app dormida */
+.card-waking {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  backdrop-filter: blur(2px);
+  border-radius: var(--radius-card);
+  z-index: 5;
+  color: var(--accent-text);
+  font-size: 13px;
+}
+
+/* Modal genérico (ayuda de atajos, etc.) */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  z-index: 1100;
+  animation: tambo-toast-in 0.15s ease;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  padding: 20px 24px;
+  max-width: 420px;
+  width: 90vw;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.modal-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  margin: 0;
+}
+.shortcut-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.shortcut-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.shortcut-list kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Resaltado de búsqueda */
+.search-hit {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent-text);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+/* Skip link para navegación por teclado */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 2000;
+  padding: 8px 12px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-radius: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+.group-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 24px 0;
+  font-style: italic;
+}
+
+/* Filtros rápidos */
+.quick-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.quick-filter {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
+}
+.quick-filter:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.quick-filter.is-active {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+}
+
+/* Resumen agregado de grupo en vista compacta */
+.group-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 6px 4px 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  margin-bottom: 8px;
+}
+.group-summary-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.group-summary-item[data-tone="ok"] {
+  color: var(--ok);
+}
+.group-summary-item[data-tone="sleep"] {
+  color: var(--unknown);
+}
+.group-summary-item[data-tone="down"] {
+  color: var(--down);
+}
+.group-summary-count {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Drag overlay en modo edición */
+.drag-overlay {
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-card);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+/* ===== Sensación nativa macOS ===== */
+
+/* Scrollbars nativas (finas, se ocultan hasta hover) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--text-muted) 40%, transparent) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted) 30%, transparent);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--text-muted) 50%, transparent);
+}
+
+/* Vibrancy en paneles (drawer, modal, server-pop) */
+.drawer,
+.modal,
+.server-pop {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Transiciones spring-like para modales y drawers */
+.modal,
+.drawer,
+.server-pop {
+  transition:
+    transform 0.25s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.2s ease;
+}
+
+/* Hover en botones: feedback sutil */
+.btn {
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    transform var(--dur-fast) ease,
+    opacity var(--dur-fast) ease;
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Focus rings nativos (más visibles) */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Selección de texto con color de acento */
+::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--text);
+}
+
+/* ===== Mejoras nativas adicionales ===== */
+
+/* Transiciones de vista (View Transitions API) */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Tooltips nativos */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+  border: 1px solid var(--border);
+  z-index: 100;
+}
+[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Menú contextual nativo */
+.menu {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 4px;
+  animation: tambo-menu-in 0.15s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes tambo-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.menu-item {
+  border-radius: 6px;
+  transition: background-color 0.1s ease;
+}
+.menu-item:hover {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+/* Modales nativos */
+.modal-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.modal {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+}
+
+/* Drawers nativos */
+.drawer {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Cards: hover más sutil y nativo */
+.card:hover:not(.is-dragging) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border-color: color-mix(in srgb, var(--g) 30%, var(--border));
+}
+
+/* Botones: feedback más sutil */
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+  transition-duration: 0.05s;
+}
+
+/* Inputs: focus ring nativo */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Pull to refresh indicator (mobile) */
+@media (max-width: 640px) {
+  .main {
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* Acciones en lote */
+.batch-bar {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  z-index: 900;
+  font-size: 13px;
+}
+.batch-bar span {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Selección de tarjeta en modo edición */
+.select-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--text-muted);
+  background: transparent;
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
+}
+.card-action-btn.is-selected .select-dot {
+  background: var(--accent);
+  border-color: var(--accent);
 }

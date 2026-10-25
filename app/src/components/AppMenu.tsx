@@ -75,6 +75,7 @@ export function AppMenu({
   };
 
   const onRemove = () => {
+    if (!window.confirm(`¿Eliminar «${app.name}»? Esta acción no se puede deshacer.`)) return;
     const { config, save } = useStore.getState();
     if (config) void save(removeApp(config, app.id));
     finish();

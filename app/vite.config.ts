@@ -25,9 +25,13 @@ export default defineConfig({
     hmr: hmrClientPort ? { clientPort: hmrClientPort, overlay: false } : { overlay: false },
   },
   cacheDir: "/tmp/vite-tambo",
+  // El build produce el shell offline servido bajo /shell/ por el plugin:
+  // TAMBO_SHELL=1 pnpm build. El base no afecta al servidor de desarrollo.
+  base: process.env.TAMBO_SHELL === "1" ? "/shell/" : "/",
   fmt: {},
   build: {
     sourcemap: false,
+    outDir: "dist",
   },
   lint: {
     jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],

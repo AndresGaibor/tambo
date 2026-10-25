@@ -1,10 +1,11 @@
-import type { ComponentType, CSSProperties } from "react";
+import { memo, type ComponentType, type CSSProperties } from "react";
 import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, GripVertical, Plus, icons } from "lucide-react";
 import type { Group } from "../schema";
 import { useStore, type ViewMode } from "../store";
 import { AppCard, type MenuPoint } from "./AppCard";
+import { GroupSummary } from "./GroupSummary";
 
 function GroupIcon({ icon }: { icon?: string }) {
   if (!icon) return null;
@@ -22,7 +23,7 @@ function GroupIcon({ icon }: { icon?: string }) {
   return <span aria-hidden="true">{icon}</span>;
 }
 
-export function GroupSection({
+function GroupSectionImpl({
   group,
   view,
   onOpenMenu,
@@ -89,7 +90,13 @@ export function GroupSection({
             <ChevronDown size={18} strokeWidth={1.75} />
           </button>
         </header>
+        {view === "compact" && <GroupSummary group={group} />}
         <div className="group-grid">
+          {group.apps.length === 0 && !editing && (
+            <p className="group-empty">
+              Sin apps en este grupo. Activa el modo edición para agregar.
+            </p>
+          )}
           {group.apps.map((app) => (
             <AppCard
               key={app.id}
@@ -115,3 +122,5 @@ export function GroupSection({
     </SortableContext>
   );
 }
+
+export const GroupSection = memo(GroupSectionImpl);

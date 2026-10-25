@@ -22,7 +22,8 @@ import {
   Users,
 } from "lucide-react";
 import { Logo } from "./Logo";
-import { useStore, type ViewMode } from "../store";
+import { ConfigIO } from "./ConfigIO";
+import { sablierInstances, sablierWord, useStore, type ViewMode } from "../store";
 import { flattenApps } from "../schema";
 import { filterGroups, firstMatch } from "../lib/search";
 import { agoOf, clockOf, fmtBytes, fmtCpu, openApp } from "../lib/format";
@@ -212,6 +213,7 @@ function MachinePanel({
 
   const [expandedServices, setExpandedServices] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [sablierOk, setSablierOk] = useState<boolean | null>(null);
 
   useEffect(() => {
     const onDown = (event: MouseEvent) => {
@@ -233,10 +235,55 @@ function MachinePanel({
     };
   }, [onClose, anchorRef]);
 
+  // Comprobación periódica de Sablier: si no responde, las apps no escalarán
+  // a cero automáticamente y hay que avisar.
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const res = await fetch("/api/sablier/health");
+        const body = res.ok ? ((await res.json()) as { ok?: boolean }) : null;
+        if (!cancelled) setSablierOk(body?.ok === true);
+      } catch {
+        if (!cancelled) setSablierOk(false);
+      }
+    };
+    void check();
+    const timer = window.setInterval(check, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+
   // Origen real de las cifras: la VM oci (systemd y cgroups del host),
   // nunca el Mac del usuario.
   const unidades = Object.values(services).filter((entry) => entry.memoryBytes != null);
   const compartidas = unidades.filter((entry) => (entry.shared ?? 1) > 1).length;
+
+  // Instancias que Sablier gestiona: unas están en sesión y otras dormidas
+  // a cero tras los 30 min sin tráfico.
+  const sablier = sablierInstances(services);
+  const sablierActivas = sablier.filter((entry) => entry.state.sessionActive).length;
+  const sablierDormidas = sablier.length - sablierActivas;
+  // RAM que Sablier mantiene liberada al tener dormidas las instancias.
+  const sablierFreedBytes = sablier
+    .filter((entry) => !entry.state.sessionActive)
+    .reduce((sum, entry) => {
+      const svc = Object.values(services).find((s) => s.unit === entry.unit);
+      return sum + (svc?.memoryBytes ?? 0);
+    }, 0);
+
+  // Historial: minutos-app dormidos en los últimos puntos disponibles.
+  const historyPoints = history.slice(-60);
+  const sleepingMinutes = Math.round(
+    historyPoints.reduce((sum, point) => {
+      const sablierUnits = Object.values(point.services ?? {}).filter(
+        (s) => s.sablier && !s.sablier.sessionActive,
+      );
+      return sum + sablierUnits.length * (15 / 60);
+    }, 0),
+  );
 
   // Cálculo de porcentajes para barras de progreso
   const ramPercent = machine
@@ -376,6 +423,12 @@ function MachinePanel({
 
       {machine ? (
         <>
+          {sablierOk === false && (
+            <div className="server-pop-banner" role="alert">
+              <AlertTriangle size={14} strokeWidth={1.75} />
+              Sablier no responde: las apps no escalarán a cero automáticamente.
+            </div>
+          )}
           <div className="server-pop-metrics">
             {/* CPU Metric with Sparkline */}
             <div
@@ -571,6 +624,53 @@ function MachinePanel({
             </div>
           )}
 
+          {sablier.length > 0 && (
+            <div className="server-pop-details">
+              <details className="server-pop-services" open={expandedServices}>
+                <summary onClick={() => setExpandedServices(!expandedServices)}>
+                  <span>
+                    Sablier · {sablierDormidas} dormidas / {sablierActivas} activas
+                  </span>
+                  <span className="chevron">
+                    {expandedServices ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                  </span>
+                </summary>
+                <ul>
+                  {sablier.map((entry) => (
+                    <li key={entry.unit} className="sablier-row">
+                      <code>{entry.unit.replace(/\.service$/, "")}</code>
+                      <span className="sablier-group">
+                        {entry.state.groups.length > 0 ? entry.state.groups.join(", ") : "—"}
+                      </span>
+                      <span
+                        className="sablier-status"
+                        data-tone={entry.state.sessionActive ? "on" : "off"}
+                      >
+                        {sablierWord(entry.state)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {sablierDormidas > 0 && sablierFreedBytes > 0 && (
+                  <p className="server-pop-note">
+                    Sablier mantiene dormidas {sablierDormidas} apps, liberando ~
+                    {fmtBytes(sablierFreedBytes)}.
+                  </p>
+                )}
+                {sleepingMinutes > 0 && (
+                  <p className="server-pop-note">
+                    Últimos 15 min: ~{sleepingMinutes} min-app dormidos (ahorro de RAM).
+                  </p>
+                )}
+                <p className="server-pop-note">
+                  <Zap size={13} strokeWidth={1.75} />
+                  Escala a cero: tras 30 min sin tráfico Sablier detiene la instancia. Al abrir la
+                  app, el portal pide a Sablier que la despierte y abra sesión.
+                </p>
+              </details>
+            </div>
+          )}
+
           <div className="server-pop-details">
             <p className="server-pop-note">
               <strong>Origen:</strong> contadores de systemd y cgroups del host de la VM (no el
@@ -722,6 +822,8 @@ export function Header() {
   const editing = useStore((s) => s.editing);
   const setEditing = useStore((s) => s.setEditing);
   const saveStatus = useStore((s) => s.saveStatus);
+  const canUndo = useStore((s) => s.canUndo);
+  const undo = useStore((s) => s.undo);
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
@@ -750,6 +852,17 @@ export function Header() {
         <ThemeButton />
         <button
           type="button"
+          className="btn btn-icon btn-ghost"
+          aria-label="Atajos de teclado"
+          title="Atajos de teclado (?)"
+          onClick={() =>
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "?", bubbles: true }))
+          }
+        >
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>?</span>
+        </button>
+        <button
+          type="button"
           className="btn btn-ghost theme-btn"
           aria-pressed={editing}
           onClick={() => setEditing(!editing)}
@@ -764,6 +877,17 @@ export function Header() {
           >
             {saveStatus === "saving" ? "Guardando…" : saveStatus === "saved" ? "Guardado" : "Error"}
           </span>
+        )}
+        {editing && <ConfigIO />}
+        {editing && canUndo && (
+          <button
+            type="button"
+            className="btn btn-ghost theme-btn"
+            onClick={() => undo()}
+            title="Deshacer último cambio (Ctrl+Z)"
+          >
+            Deshacer
+          </button>
         )}
       </div>
     </header>

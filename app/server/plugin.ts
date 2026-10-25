@@ -1,6 +1,6 @@
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
-import { resolve } from "node:path";
+import { extname, join, resolve } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin, ViteDevServer } from "vite-plus";
 import { ConfigStore } from "./config-store";
@@ -10,6 +10,7 @@ import {
   getConfig,
   getHealth,
   getServices,
+  getSablierHealth,
   postService,
   putConfig,
   refreshHealth,
@@ -20,6 +21,7 @@ import {
 } from "./handlers";
 import { HealthService } from "./health";
 import { runServiceAction, servicesSnapshot, unitFor } from "./services";
+import { sablierAvailable } from "./sablier";
 import { StatsKeeper, type MachineStats } from "./stats";
 import type { ServiceEntry } from "./services";
 import type { TamboConfig } from "../src/schema";
@@ -29,6 +31,55 @@ function send(res: ServerResponse, api: ApiResponse): void {
   res.statusCode = api.status;
   for (const [name, value] of Object.entries(headers)) res.setHeader(name, value);
   res.end(JSON.stringify(api.body));
+}
+
+const SHELL_TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".woff2": "font/woff2",
+  ".webmanifest": "application/manifest+json",
+};
+
+/**
+ * Shell offline construido: sirve dist/ bajo /shell/. Ruta sanitizada y
+ * lista cerrada de extensiones; los assets llevan hash inmutable.
+ */
+async function serveShell(res: ServerResponse, distDir: string, rel: string): Promise<void> {
+  const clean = rel
+    .replace(/\\/g, "/")
+    .split("/")
+    .filter((part) => part && part !== "." && part !== "..");
+  const abs = resolve(join(distDir, ...clean));
+  if (!abs.startsWith(resolve(distDir))) {
+    res.statusCode = 403;
+    res.end();
+    return;
+  }
+  const info = await stat(abs).catch(() => null);
+  if (!info?.isFile()) {
+    res.statusCode = 404;
+    res.end();
+    return;
+  }
+  const type = SHELL_TYPES[extname(abs).toLowerCase()] ?? "application/octet-stream";
+  res.statusCode = 200;
+  res.setHeader("Content-Type", type);
+  res.setHeader("Content-Length", info.size);
+  // El HTML del shell se revalida; los assets con hash son inmutables.
+  res.setHeader(
+    "Cache-Control",
+    abs.endsWith(".html") ? "no-cache" : "public, max-age=31536000, immutable",
+  );
+  const stream = createReadStream(abs);
+  stream.on("error", () => {
+    if (!res.headersSent) res.statusCode = 500;
+    res.end();
+  });
+  stream.pipe(res);
 }
 
 function readBody(req: IncomingMessage, limit: number): Promise<Buffer | "too-large" | null> {
@@ -197,6 +248,19 @@ export function tamboPlugin(): Plugin {
             return;
           }
 
+          // Shell offline construido (TAMBO_SHELL=1 pnpm build).
+          if (
+            (path === "/shell" || path === "/shell/") &&
+            (method === "GET" || method === "HEAD")
+          ) {
+            await serveShell(res, resolve(process.cwd(), "dist"), "index.html");
+            return;
+          }
+          if (path.startsWith("/shell/") && (method === "GET" || method === "HEAD")) {
+            await serveShell(res, resolve(process.cwd(), "dist"), path.slice("/shell/".length));
+            return;
+          }
+
           const staticMatch = /^\/(shots|assets)\/(.+)$/.exec(path);
           if (staticMatch && (method === "GET" || method === "HEAD")) {
             const resolved = resolveStaticPath(dataDir, staticMatch[1], staticMatch[2]);
@@ -223,6 +287,11 @@ export function tamboPlugin(): Plugin {
               res.end();
             });
             stream.pipe(res);
+            return;
+          }
+
+          if (path === "/api/sablier/health" && method === "GET") {
+            send(res, await getSablierHealth({ available: sablierAvailable }));
             return;
           }
 

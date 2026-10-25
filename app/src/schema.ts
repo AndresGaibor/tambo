@@ -57,6 +57,9 @@ export const appSchema = z.strictObject({
   // Icono estable de la app: "lucide:<nombre>" o un emoji. La identidad
   // visual prioriza cover svg/image, luego este icono, luego la inicial.
   icon: z.string().max(64).optional(),
+  // Duración de la sesión de Sablier para esta app, en minutos. Si no se
+  // indica, Sablier usa 30 min por defecto.
+  sessionMinutes: z.number().int().min(1).max(240).optional(),
 });
 export type AppEntry = z.output<typeof appSchema>;
 
@@ -98,6 +101,33 @@ export const configSchema = z
     });
   });
 export type TamboConfig = z.output<typeof configSchema>;
+
+/**
+ * Estado de Sablier para una unidad gestionada por el escalador. Todos los
+ * campos nuevos son opcionales: el bloque solo aparece si Sablier gestiona la
+ * unidad.
+ */
+export const sablierStateSchema = z.strictObject({
+  sessionActive: z.boolean(),
+  status: z.string(),
+  groups: z.array(z.string()).default([]),
+  expiresAt: z.number().int().optional(),
+  managed: z.boolean(),
+  sessionMinutes: z.number().int().min(1).max(240).optional(),
+});
+export type SablierState = z.output<typeof sablierStateSchema>;
+
+/** Estado de una unidad systemd declarada por una app. */
+export const serviceEntrySchema = z.strictObject({
+  unit: z.string(),
+  state: z.string(),
+  cgroup: z.string().optional(),
+  memoryBytes: z.number().nullable().optional(),
+  cpuPercent: z.number().nullable().optional(),
+  shared: z.number().optional(),
+  sablier: sablierStateSchema.optional(),
+});
+export type ServiceEntry = z.output<typeof serviceEntrySchema>;
 
 /** Todas las apps del archivo, aplanadas, en orden de aparición. */
 export function flattenApps(config: TamboConfig): AppEntry[] {

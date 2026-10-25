@@ -6,13 +6,127 @@
     <title>Tambo</title>
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0B0D12" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F7F5F0" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#12151C" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
     <meta name="apple-mobile-web-app-title" content="Tambo" />
+    <!--
+      Arranque sin blanco: fondo y presentación viven aquí, antes de CSS y de
+      React. Sin fuentes externas ni peticiones: solo system-ui y SVG en línea.
+    -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #0b0d12;
+        color: #e8eaf0;
+      }
+      @media (prefers-color-scheme: light) {
+        html,
+        body {
+          background: #f7f5f0;
+          color: #1b1d24;
+        }
+      }
+      #boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        font-size: 14px;
+        color: #8a92a6;
+      }
+      #boot svg {
+        width: 56px;
+        height: 56px;
+        animation: tambo-boot-pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes tambo-boot-pulse {
+        0%,
+        100% {
+          opacity: 0.5;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.06);
+        }
+      }
+      #boot p {
+        margin: 0;
+        animation: tambo-boot-fade 0.3s ease;
+      }
+      @keyframes tambo-boot-fade {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      #boot button {
+        font: inherit;
+        color: #e8eaf0;
+        background: #12151c;
+        border: 1px solid #232836;
+        border-radius: 8px;
+        padding: 6px 14px;
+        cursor: pointer;
+      }
+      @media (prefers-color-scheme: light) {
+        #boot button {
+          color: #1b1d24;
+          background: #ffffff;
+          border-color: #e4e0d6;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="boot" role="status" aria-live="polite">
+      <svg viewBox="0 0 512 512" aria-hidden="true">
+        <rect width="512" height="512" rx="113" fill="#0b0d12" />
+        <path
+          fill="#F5B83D"
+          fill-rule="evenodd"
+          stroke="#F5B83D"
+          stroke-width="18"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+          d="M96 186 L96 156 L126 156 L126 126 L156 126 L156 96 L186 96 L326 96 L356 96 L356 126 L386 126 L386 156 L416 156 L416 186 L416 326 L416 356 L386 356 L386 386 L356 386 L356 416 L326 416 L186 416 L156 416 L156 386 L126 386 L126 356 L96 356 L96 326 Z M256 200 A56 56 0 1 0 256 312 A56 56 0 1 0 256 200 Z"
+        />
+      </svg>
+      <p>Cargando aplicaciones…</p>
+    </div>
+    <script>
+      // Si el arranque de JavaScript falla, la presentación se convierte en
+      // un mensaje recuperable en lugar de una pantalla congelada.
+      (function () {
+        var fallado = false;
+        function aviso() {
+          if (fallado) return;
+          fallado = true;
+          var boot = document.getElementById("boot");
+          if (!boot) return;
+          boot.setAttribute("role", "alert");
+          boot.innerHTML =
+            "<p>No se pudo iniciar Tambo</p>" +
+            '<button type="button" onclick="location.reload()">Reintentar</button>';
+        }
+        window.addEventListener("error", aviso);
+        window.addEventListener("unhandledrejection", aviso);
+        window.addEventListener("vite:preloadError", aviso);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

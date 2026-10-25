@@ -12,6 +12,11 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>,
 );
 
+// La presentación previa (index.html) se retira al montar la interfaz.
+requestAnimationFrame(() => {
+  document.getElementById("boot")?.remove();
+});
+
 // Service worker también en desarrollo (decisión abierta de la spec):
 // es lo que hace instalable el portal desde el servidor de desarrollo.
 // El sw.js es red-primero para navegación y bundle, no cachea módulos de

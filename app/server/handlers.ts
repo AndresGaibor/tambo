@@ -210,21 +210,52 @@ export async function getServices(deps: {
 export async function postService(deps: {
   getConfig: () => import("../src/schema").TamboConfig | null;
   unitFor: (config: import("../src/schema").TamboConfig | null, appId: string) => string | null;
-  runAction: (unit: string, action: "start" | "stop") => Promise<{ state: string }>;
+  runAction: (
+    unit: string,
+    action: "start" | "stop",
+    sessionMinutes?: number,
+  ) => Promise<{ state: string; sablier?: import("./services").SablierState }>;
   action: unknown;
   appId: string;
 }): Promise<ApiResponse> {
   if (deps.action !== "start" && deps.action !== "stop") {
     return { status: 400, body: { error: "action debe ser start o stop" } };
   }
-  const unit = deps.unitFor(deps.getConfig(), deps.appId);
+  const config = deps.getConfig();
+  const unit = deps.unitFor(config, deps.appId);
   if (!unit) {
     return { status: 404, body: { error: "la app no declara service" } };
   }
+  // Duración de sesión por app, si la declara en apps.json.
+  let sessionMinutes: number | undefined;
+  if (config) {
+    for (const group of config.groups) {
+      const app = group.apps.find((entry) => entry.id === deps.appId);
+      if (app) {
+        sessionMinutes = app.sessionMinutes;
+        break;
+      }
+    }
+  }
   try {
-    const result = await deps.runAction(unit, deps.action);
+    const result = await deps.runAction(unit, deps.action, sessionMinutes);
     return { status: 200, body: { ok: true, unit, ...result }, headers: noCache };
   } catch (error) {
     return { status: 500, body: { error: `systemctl falló: ${(error as Error).message}` } };
+  }
+}
+
+/**
+ * Salud de Sablier: el portal la consulta periódicamente para avisar si el
+ * escalador no responde (en ese caso las apps no vuelven a cero solas).
+ */
+export async function getSablierHealth(deps: {
+  available: () => Promise<boolean>;
+}): Promise<ApiResponse> {
+  try {
+    const ok = await deps.available();
+    return { status: 200, body: { ok }, headers: noCache };
+  } catch {
+    return { status: 200, body: { ok: false }, headers: noCache };
   }
 }

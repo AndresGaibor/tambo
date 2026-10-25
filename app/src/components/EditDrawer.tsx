@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Trash2, X } from "lucide-react";
 import {
   GROUP_COLORS,
@@ -25,6 +25,7 @@ type AppForm = {
   healthUrl: string;
   healthExpect: string;
   service: string;
+  sessionMinutes: string;
   icon: string;
 };
 
@@ -42,6 +43,7 @@ const EMPTY_APP: AppForm = {
   healthUrl: "",
   healthExpect: "",
   service: "",
+  sessionMinutes: "",
   icon: "",
 };
 
@@ -62,6 +64,7 @@ function appToForm(app: AppEntry): AppForm {
         ? String(app.health.expect)
         : `${app.health.expect[0]}-${app.health.expect[1]}`,
     service: app.service ?? "",
+    sessionMinutes: app.sessionMinutes ? String(app.sessionMinutes) : "",
     icon: app.icon ?? "",
   };
 }
@@ -112,6 +115,7 @@ export function EditDrawer() {
     color: "gold",
     icon: "",
   });
+  const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setErrors({});
@@ -192,6 +196,9 @@ export function EditDrawer() {
           }
         : {}),
       ...(appForm.service.trim() ? { service: appForm.service.trim() } : {}),
+      ...(appForm.sessionMinutes.trim()
+        ? { sessionMinutes: Number(appForm.sessionMinutes.trim()) }
+        : {}),
       ...(appForm.icon.trim() ? { icon: appForm.icon.trim() } : {}),
     };
     return app;
@@ -242,6 +249,17 @@ export function EditDrawer() {
 
   const submit = () => (drawer.mode === "group" ? void submitGroup() : void submitApp());
 
+  // Guardado automático con debounce: 800 ms después del último cambio.
+  useEffect(() => {
+    const appId = drawer.mode === "app" ? drawer.appId : null;
+    if (!appId && drawer.mode !== "group") return;
+    const timer = setTimeout(() => {
+      if (drawer.mode === "app") void submitApp();
+      else if (drawer.mode === "group" && drawer.groupId) void submitGroup();
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [appForm, groupForm, drawer.mode]);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !(event as KeyboardEventInit).isComposing) {
@@ -251,6 +269,22 @@ export function EditDrawer() {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
         submit();
+        return;
+      }
+      if (event.key === "Tab" && ref.current) {
+        const focusable = ref.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -299,7 +333,12 @@ export function EditDrawer() {
   return (
     <>
       <div className="drawer-backdrop" onClick={requestClose} aria-hidden="true" />
-      <aside className="drawer" role="dialog" aria-label={isApp ? "Editar app" : "Editar grupo"}>
+      <aside
+        className="drawer"
+        role="dialog"
+        aria-label={isApp ? "Editar app" : "Editar grupo"}
+        ref={ref}
+      >
         <header className="drawer-head">
           <h2 className="drawer-title">
             {isApp
@@ -536,6 +575,18 @@ export function EditDrawer() {
                   onChange={(e) => setApp({ service: e.target.value })}
                 />
                 {errors.service && <span className="field-error">{errors.service}</span>}
+              </div>
+              <div className="field">
+                <label htmlFor="f-session">Sesión Sablier (min, opcional)</label>
+                <input
+                  id="f-session"
+                  type="number"
+                  min={1}
+                  max={240}
+                  placeholder="30"
+                  value={appForm.sessionMinutes}
+                  onChange={(e) => setApp({ sessionMinutes: e.target.value })}
+                />
               </div>
             </>
           ) : (

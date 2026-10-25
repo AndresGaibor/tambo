@@ -10,9 +10,12 @@ import { GroupSection } from "./components/GroupSection";
 import { EditableBoard } from "./components/EditableBoard";
 import { EditDrawer } from "./components/EditDrawer";
 import { DetailsDrawer } from "./components/DetailsDrawer";
+import { ToastStack } from "./components/ToastStack";
 import { ErrorBanner } from "./components/ErrorBanner";
 import { EmptyState } from "./components/EmptyState";
+import { SkeletonBoard } from "./components/SkeletonBoard";
 import { AppMenu } from "./components/AppMenu";
+import { KeyboardHelp } from "./components/KeyboardHelp";
 import { Logo } from "./components/Logo";
 import { AppIconSprite } from "./components/AppIdentity";
 import type { MenuPoint } from "./components/AppCard";
@@ -20,15 +23,25 @@ import type { MenuPoint } from "./components/AppCard";
 export default function App() {
   const config = useStore((s) => s.config);
   const query = useStore((s) => s.query);
+  const services = useStore((s) => s.services);
+  const health = useStore((s) => s.health);
+  const quickFilter = useStore((s) => s.quickFilter);
+  const setQuickFilter = useStore((s) => s.setQuickFilter);
   const editing = useStore((s) => s.editing);
+  const selectedApps = useStore((s) => s.selectedApps);
+  const batchPowerAction = useStore((s) => s.batchPowerAction);
+  const clearSelection = useStore((s) => s.clearSelection);
   const view = useStore((s) => s.view);
   const shortcuts = useStore((s) => s.shortcuts);
   const loadError = useStore((s) => s.loadError);
+  const online = useStore((s) => s.online);
   const load = useStore((s) => s.load);
   const loadHealth = useStore((s) => s.loadHealth);
   const theme = useStore((s) => s.theme);
   const drawerOpen = useStore((s) => s.drawer.mode !== "closed");
   const detailsOpen = useStore((s) => s.details.appId !== null);
+  const detailsAppId = useStore((s) => s.details.appId);
+  const openDetails = useStore((s) => s.openDetails);
   const [menu, setMenu] = useState<{ app: AppEntry; point: MenuPoint } | null>(null);
   const menuRef = useRef(menu);
   menuRef.current = menu;
@@ -37,7 +50,13 @@ export default function App() {
     void load();
     void loadHealth();
     void useStore.getState().loadServices();
-    const timer = setInterval(() => void useStore.getState().loadHealth(), 10_000);
+    const timer = setInterval(() => {
+      void useStore.getState().loadHealth();
+      // Recuperación automática: mientras la configuración venga de la
+      // caché o el portal esté sin respuesta, se revalida.
+      const st = useStore.getState();
+      if (!st.online || st.configSource === "cache") void st.load();
+    }, 10_000);
     const servicesTimer = setInterval(() => void useStore.getState().loadServices(), 15_000);
     // La configuración también se relee: si cambia apps.json a mano o por
     // otro proceso, el mapeo app → unidad no debe quedarse obsoleto.
@@ -48,6 +67,45 @@ export default function App() {
       clearInterval(configTimer);
     };
   }, [load, loadHealth]);
+
+  // Deep link: #app-id abre el drawer de esa app.
+  useEffect(() => {
+    const applyHash = () => {
+      const hash = window.location.hash.replace(/^#/, "");
+      if (hash && config) {
+        const found = flattenApps(config).some((a) => a.id === hash);
+        if (found) openDetails(hash);
+      }
+    };
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, [config, openDetails]);
+
+  // Mantener el hash sincronizado con el drawer de detalles.
+  useEffect(() => {
+    if (detailsAppId) {
+      if (window.location.hash !== `#${detailsAppId}`) {
+        window.history.replaceState(null, "", `#${detailsAppId}`);
+      }
+    } else if (window.location.hash) {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  }, [detailsAppId]);
+
+  // Solicitar permiso de notificaciones una vez (no bloquea).
+  useEffect(() => {
+    if (typeof Notification === "undefined") return;
+    if (Notification.permission === "default") {
+      // Esperar a la primera interacción del usuario.
+      const handler = () => {
+        void Notification.requestPermission();
+        window.removeEventListener("click", handler);
+      };
+      window.addEventListener("click", handler, { once: true });
+      return () => window.removeEventListener("click", handler);
+    }
+  }, []);
 
   // Actualización en vivo: el servidor avisa con un evento HMR propio y se
   // vuelve a pedir la configuración sin recargar la página.
@@ -61,6 +119,24 @@ export default function App() {
     };
     hot.on("tambo:config", onConfig);
     return () => hot.off("tambo:config", onConfig);
+  }, []);
+
+  // Sincronización entre pestañas: cuando una pestaña guarda, las demás
+  // recargan la configuración sin recargar la página.
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const channel = new BroadcastChannel("tambo-sync");
+    const onMessage = (event: MessageEvent) => {
+      if (event.data === "config-changed") {
+        void useStore.getState().load();
+        void useStore.getState().loadServices();
+      }
+    };
+    channel.addEventListener("message", onMessage);
+    return () => {
+      channel.removeEventListener("message", onMessage);
+      channel.close();
+    };
   }, []);
 
   // Window Controls Overlay: solo cuando el navegador lo activa de verdad.
@@ -162,7 +238,23 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [shortcuts]);
 
-  const filtered = useMemo(() => filterGroups(config?.groups ?? [], query), [config, query]);
+  const filtered = useMemo(() => {
+    let groups = filterGroups(config?.groups ?? [], query);
+    if (quickFilter === "all") return groups;
+    return groups
+      .map((group) => ({
+        ...group,
+        apps: group.apps.filter((app) => {
+          if (quickFilter === "prod") return app.tags.includes("prod");
+          if (quickFilter === "dev") return app.tags.includes("dev");
+          const svc = services?.[app.id];
+          if (quickFilter === "sleeping") return !!svc?.sablier && !svc.sablier.sessionActive;
+          if (quickFilter === "down") return health?.[app.id]?.status === "down";
+          return true;
+        }),
+      }))
+      .filter((g) => g.apps.length > 0);
+  }, [config, query, quickFilter, services, health]);
   const hasApps = !!config && flattenApps(config).length > 0;
   const searching = query.trim().length > 0;
   const openMenu = (app: AppEntry, point: MenuPoint) => setMenu({ app, point });
@@ -170,12 +262,24 @@ export default function App() {
   return (
     <>
       <AppIconSprite />
+      <a href="#main-content" className="skip-link">
+        Saltar al contenido
+      </a>
       <Header />
       <ErrorBanner />
-      <main className="main" data-view={view}>
-        {!config && !loadError && (
-          <div className="splash">
+      <main id="main-content" className="main" data-view={view} tabIndex={-1}>
+        {!config && !loadError && online && <SkeletonBoard />}
+        {!config && (!online || !!loadError) && (
+          <div className="empty" role="alert">
             <Logo size={48} />
+            <p>Sin conexión con Tambo</p>
+            <p className="card-desc">
+              No hay una copia guardada en este navegador. Cuando haya conexión, la primera carga
+              guardará tus accesos para poder abrirlos sin servidor.
+            </p>
+            <button type="button" className="btn" onClick={() => void load()}>
+              Reintentar
+            </button>
           </div>
         )}
         {config && !hasApps && <EmptyState />}
@@ -184,6 +288,26 @@ export default function App() {
             {/* Con búsqueda activa la fila de anclados se oculta: los
                 resultados ya están a la vista y ninguna app se duplica. */}
             {!searching && <PinnedRow onOpenMenu={openMenu} />}
+            <div className="quick-filters" role="group" aria-label="Filtros rápidos">
+              {(["all", "prod", "dev", "sleeping", "down"] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  className={`quick-filter${quickFilter === f ? " is-active" : ""}`}
+                  onClick={() => setQuickFilter(f)}
+                >
+                  {f === "all"
+                    ? "Todas"
+                    : f === "prod"
+                      ? "Prod"
+                      : f === "dev"
+                        ? "Dev"
+                        : f === "sleeping"
+                          ? "Dormidas"
+                          : "Caídas"}
+                </button>
+              ))}
+            </div>
             {editing ? (
               <EditableBoard onOpenMenu={openMenu} />
             ) : (
@@ -208,11 +332,31 @@ export default function App() {
           </>
         )}
       </main>
+      {editing && selectedApps.size > 0 && (
+        <div className="batch-bar" role="toolbar" aria-label="Acciones en lote">
+          <span>{selectedApps.size} seleccionadas</span>
+          <button
+            type="button"
+            className="btn btn-accent"
+            onClick={() => void batchPowerAction("start")}
+          >
+            Encender
+          </button>
+          <button type="button" className="btn" onClick={() => void batchPowerAction("stop")}>
+            Apagar
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={clearSelection}>
+            Limpiar
+          </button>
+        </div>
+      )}
       {menu && (
         <AppMenu app={menu.app} x={menu.point.x} y={menu.point.y} onClose={() => setMenu(null)} />
       )}
       {drawerOpen && <EditDrawer />}
       {detailsOpen && <DetailsDrawer />}
+      <ToastStack />
+      <KeyboardHelp />
     </>
   );
 }
