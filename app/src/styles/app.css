@@ -258,6 +258,36 @@ kbd {
   color: var(--down);
 }
 
+/* ===== Window Controls Overlay =====
+   Solo con la clase wco, que App.tsx activa cuando
+   navigator.windowControlsOverlay.visible es true (nada de adivinar por
+   user-agent). El encabezado ocupa exactamente el área de título con las
+   variables env(); sin soporte, queda el encabezado normal. */
+html.wco .header {
+  position: fixed;
+  left: env(titlebar-area-x, 0px);
+  top: env(titlebar-area-y, 0px);
+  width: env(titlebar-area-width, 100%);
+  min-height: env(titlebar-area-height, 56px);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+html.wco .header,
+html.wco .brand {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+html.wco .header button,
+html.wco .header input,
+html.wco .header a,
+html.wco .header kbd,
+html.wco .header .menu {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
 /* ===== Buscador ===== */
 
 .search {
@@ -759,6 +789,62 @@ kbd {
 .chip[data-tag="personal"] {
   color: var(--c-violet);
   background: color-mix(in srgb, var(--c-violet) 12%, transparent);
+}
+
+/* Sablier: la misma cápsula, con el rayo y el tono del estado. */
+.chip-sablier {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.chip-sablier[data-tone="on"] {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+}
+
+.chip-sablier[data-tone="off"] {
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--unknown) 14%, transparent);
+}
+
+.chip-sablier svg {
+  flex: none;
+}
+
+/* Espera de Sablier: el botón crece con el texto y gira el icono. */
+.card-action-btn.is-loading {
+  width: auto;
+  padding: 0 10px;
+  gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.card-action-label {
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.spin {
+  animation: tambo-spin 900ms linear infinite;
+  flex: none;
+}
+
+@keyframes tambo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
 }
 
 /* ===== Vista portadas ===== */
@@ -1615,6 +1701,53 @@ kbd {
   padding: 1px 5px;
   border-radius: 999px;
   white-space: nowrap;
+}
+
+/* Sablier en el panel del servidor: instancia, grupo y estado. */
+.server-pop-services li.sablier-row {
+  grid-template-columns: 1fr auto auto;
+}
+
+.server-pop-services li.sablier-row .sablier-group {
+  font-family: var(--font-ui);
+  color: var(--text-muted);
+}
+
+.server-pop-services li.sablier-row .sablier-status {
+  font-family: var(--font-ui);
+  padding: 1px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.server-pop-services li.sablier-row .sablier-status[data-tone="on"] {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+}
+
+.server-pop-services li.sablier-row .sablier-status[data-tone="off"] {
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--unknown) 16%, transparent);
+}
+
+/* Bloque Sablier del panel de detalles. */
+.sablier-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.sablier-state[data-tone="on"] {
+  color: var(--ok);
+}
+
+.sablier-state[data-tone="off"] {
+  color: var(--text-muted);
+}
+
+.sablier-state svg {
+  flex: none;
 }
 
 .server-pop-empty {

@@ -63,7 +63,29 @@ export default function App() {
     return () => hot.off("tambo:config", onConfig);
   }, []);
 
-  // Tema: data-theme en la raíz y meta theme-color acorde.
+  // Window Controls Overlay: solo cuando el navegador lo activa de verdad.
+  // La clase wco mueve el encabezado al área de título con env(titlebar-area-*).
+  useEffect(() => {
+    const overlay = (
+      navigator as Navigator & {
+        windowControlsOverlay?: {
+          visible: boolean;
+          addEventListener(type: "geometrychange", listener: () => void): void;
+          removeEventListener(type: "geometrychange", listener: () => void): void;
+        };
+      }
+    ).windowControlsOverlay;
+    if (!overlay) return;
+    const update = () => {
+      document.documentElement.classList.toggle("wco", Boolean(overlay.visible));
+    };
+    overlay.addEventListener("geometrychange", update);
+    update();
+    return () => overlay.removeEventListener("geometrychange", update);
+  }, []);
+
+  // Tema: data-theme en la raíz y meta theme-color acorde. El color sigue la
+  // superficie del encabezado para que la ventana del SO no destone.
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "system") root.removeAttribute("data-theme");
@@ -73,7 +95,7 @@ export default function App() {
       (theme === "system" && window.matchMedia("(prefers-color-scheme: light)").matches);
     document
       .querySelectorAll('meta[name="theme-color"]')
-      .forEach((meta) => meta.setAttribute("content", light ? "#F7F5F0" : "#0B0D12"));
+      .forEach((meta) => meta.setAttribute("content", light ? "#FFFFFF" : "#12151C"));
   }, [theme]);
 
   // Atajos: / o Cmd+K buscan siempre; e, t y 1-9 son conmutables y nunca

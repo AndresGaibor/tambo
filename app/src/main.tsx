@@ -12,8 +12,11 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>,
 );
 
-// El service worker solo se registra en producción para no estorbar al HMR.
-if ("serviceWorker" in navigator && import.meta.env.PROD) {
+// Service worker también en desarrollo (decisión abierta de la spec):
+// es lo que hace instalable el portal desde el servidor de desarrollo.
+// El sw.js es red-primero para navegación y bundle, no cachea módulos de
+// origen ni toca el websocket del HMR, así que no estorba.
+if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     void navigator.serviceWorker.register("/sw.js");
   });
