@@ -34,7 +34,7 @@
         {
           "id": "elcaliz-admin",
           "name": "Admin de plataforma",
-          "description": "Organizaciones, suscripciones, accesos y cobros",
+          "description": "Organizaciones, suscripciones y accesos",
           "url": "https://admin.elcaliz.lab.andresgaibor.com",
           "tags": [
             "dev"
@@ -72,7 +72,7 @@
         {
           "id": "elcaliz-api",
           "name": "API del ERP",
-          "description": "Servicios del ERP para integraciones",
+          "description": "Para integrar el ERP desde otras aplicaciones",
           "url": "https://api.elcaliz.lab.andresgaibor.com",
           "tags": [
             "dev"
@@ -91,7 +91,7 @@
         {
           "id": "elcaliz-asistente",
           "name": "Asistente móvil",
-          "description": "Asistente del ERP para móvil",
+          "description": "Chat con el ERP desde el móvil",
           "url": "https://asistente.elcaliz.lab.andresgaibor.com",
           "tags": [
             "dev"
@@ -163,7 +163,7 @@
         {
           "id": "facturador-portal",
           "name": "Portal de facturación",
-          "description": "Emitir comprobantes SRI, clientes, estados y RIDE",
+          "description": "Emisión de comprobantes electrónicos",
           "url": "https://oracle.tail4a8b59.ts.net:8091/portal",
           "tags": [
             "local",
@@ -182,7 +182,6 @@
         {
           "id": "facturador-inicio",
           "name": "Presentación",
-          "description": "Presentación del facturador",
           "url": "https://oracle.tail4a8b59.ts.net:8091/",
           "tags": [
             "local"
@@ -200,7 +199,7 @@
         {
           "id": "facturador-docs",
           "name": "Documentación",
-          "description": "Guías y contrato de la API del facturador",
+          "description": "Guías y contrato de la API",
           "url": "https://oracle.tail4a8b59.ts.net:8091/docs/introduccion",
           "tags": [
             "local",
@@ -219,7 +218,7 @@
         {
           "id": "facturador-api",
           "name": "API para ERP (OpenAPI)",
-          "description": "Contrato de la API para integraciones",
+          "description": "Especificación para integraciones",
           "url": "https://oracle.tail4a8b59.ts.net:8091/openapi.json",
           "tags": [
             "local",
