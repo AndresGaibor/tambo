@@ -11,6 +11,9 @@ export type ServiceEntry = {
   cgroup?: string;
   memoryBytes?: number | null;
   cpuPercent?: number | null;
+  // La unidad sirve a varias apps: sus métricas son del conjunto, no de
+  // cada app, así que la interfaz no las atribuye individualmente.
+  shared?: number;
 };
 
 /** Ejecuta systemctl --user contra el bus de la sesión del propietario. */
@@ -69,6 +72,15 @@ export async function servicesSnapshot(config: TamboConfig | null): Promise<{
         ...(info.cgroup ? { cgroup: info.cgroup } : {}),
       };
     }
+  }
+  // Segunda pasada: cuántas apps comparten cada unidad.
+  const perUnit = new Map<string, number>();
+  for (const entry of Object.values(services)) {
+    perUnit.set(entry.unit, (perUnit.get(entry.unit) ?? 0) + 1);
+  }
+  for (const entry of Object.values(services)) {
+    const count = perUnit.get(entry.unit) ?? 1;
+    if (count > 1) entry.shared = count;
   }
   return { services };
 }

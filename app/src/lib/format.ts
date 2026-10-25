@@ -29,9 +29,16 @@ function since(entry: HealthEntry, now: number): number {
   return entry.checkedAt ? now - Date.parse(entry.checkedAt) : 0;
 }
 
+/** Texto corto del estado, para mostrar con el punto. */
+export function statusWord(entry: HealthEntry | undefined): string {
+  if (!entry || entry.status === "unknown") return "Sin comprobar";
+  if (entry.status === "down") return "Sin respuesta";
+  return "Activa";
+}
+
 /** Texto de estado para tooltip y atributo accesible. */
 export function statusText(entry: HealthEntry | undefined, now = Date.now()): string {
-  if (!entry || entry.status === "unknown") return "Estado desconocido";
+  if (!entry || entry.status === "unknown") return "Sin comprobar";
   if (entry.status === "down") {
     return `Sin respuesta desde hace ${relative(since(entry, now))}`;
   }
@@ -59,6 +66,28 @@ export function fmtBytes(bytes: number): string {
 export function fmtCpu(percent: number | null | undefined): string {
   if (percent == null || Number.isNaN(percent)) return "—";
   return String(percent < 10 ? Math.round(percent * 10) / 10 : Math.round(percent));
+}
+
+export const ENV_TAGS = ["prod", "dev", "pruebas", "personal"] as const;
+
+/** Primer tag de entorno declarado, si existe. */
+export function envOf(app: { tags: string[] }): string | null {
+  return app.tags.find((tag) => (ENV_TAGS as readonly string[]).includes(tag)) ?? null;
+}
+
+function timeOf(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" });
+}
+
+/** "hace 12 s" / "hace 3 min" a partir de un momento Date.now. */
+export function agoOf(timestamp: number, now = Date.now()): string {
+  if (!timestamp) return "nunca";
+  return `hace ${relative(now - timestamp)}`;
+}
+
+/** Hora legible de la última actualización; "nunca" si no hubo. */
+export function clockOf(timestamp: number): string {
+  return timestamp ? timeOf(timestamp) : "nunca";
 }
 
 /** Abre una app según settings.openIn. Cmd o Ctrl con clic abre pestaña nueva. */

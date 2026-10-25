@@ -1,11 +1,12 @@
 import { useState, type CSSProperties, type MouseEvent } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, MoreHorizontal, Power } from "lucide-react";
+import { GripVertical, Info, MoreHorizontal, Power } from "lucide-react";
 import type { AppEntry, Group, GroupColor } from "../schema";
-import { useStore } from "../store";
-import { fmtBytes, fmtCpu, hostOf, statusText, statusVar } from "../lib/format";
+import { useStore, type ViewMode } from "../store";
+import { envOf, statusText, statusVar, statusWord } from "../lib/format";
 import { Cover } from "./Cover";
+import { AppIdentity } from "./AppIdentity";
 
 export type MenuPoint = { x: number; y: number };
 
@@ -13,14 +14,16 @@ export function AppCard({
   app,
   group,
   color,
-  index,
+  view,
   onOpenMenu,
+  onOpenDetails,
 }: {
   app: AppEntry;
   group: Group;
   color: GroupColor;
-  index: number;
+  view: ViewMode;
   onOpenMenu: (app: AppEntry, point: MenuPoint) => void;
+  onOpenDetails: (appId: string) => void;
 }) {
   const health = useStore((s) => s.health[app.id]);
   const service = useStore((s) => (app.service ? s.services[app.id] : undefined));
@@ -50,102 +53,154 @@ export function AppCard({
     }
   };
 
+  const env = envOf(app);
+  const word = statusWord(health);
+
+  // Botones hermanos del enlace, nunca anidados: la zona clicable grande la
+  // da el ::after del enlace, y los botones viven por encima.
+  const actions = (
+    <div className="card-actions">
+      {app.service && (
+        <button
+          type="button"
+          className="card-action-btn"
+          aria-label={service?.state === "active" ? `Apagar ${app.name}` : `Encender ${app.name}`}
+          title={service?.state === "active" ? `Apagar ${app.name}` : `Encender ${app.name}`}
+          disabled={powering}
+          onClick={(event) => void onPower(event)}
+        >
+          <Power
+            size={16}
+            strokeWidth={1.75}
+            style={service?.state === "active" ? { color: "var(--ok)" } : undefined}
+          />
+        </button>
+      )}
+      <button
+        type="button"
+        className="card-action-btn"
+        aria-label={`Detalles de ${app.name}`}
+        title={`Detalles de ${app.name}`}
+        onClick={(event) => {
+          stop(event);
+          onOpenDetails(app.id);
+        }}
+      >
+        <Info size={16} strokeWidth={1.75} />
+      </button>
+      <button
+        type="button"
+        className="card-action-btn"
+        aria-label={`Menú de ${app.name}`}
+        onClick={(event) => {
+          stop(event);
+          const rect = event.currentTarget.getBoundingClientRect();
+          onOpenMenu(app, { x: rect.left, y: rect.bottom + 6 });
+        }}
+      >
+        <MoreHorizontal size={16} strokeWidth={1.75} />
+      </button>
+      {editing && (
+        <button
+          type="button"
+          className="card-action-btn drag-handle"
+          aria-label={`Arrastrar ${app.name}`}
+          title="Arrastrar, o Espacio y flechas con teclado"
+          onClick={stop}
+          onContextMenu={stop}
+          {...sortable.attributes}
+          {...sortable.listeners}
+        >
+          <GripVertical size={16} strokeWidth={1.75} />
+        </button>
+      )}
+    </div>
+  );
+
+  const linkProps = {
+    className: "card-link",
+    href: app.url,
+    target: openIn === "newTab" ? ("_blank" as const) : undefined,
+    rel: "noopener",
+  };
+
   return (
-    <a
+    <div
       ref={sortable.setNodeRef}
-      className={`card${sortable.isDragging ? " is-dragging" : ""}`}
+      className={`card card-${view}${sortable.isDragging ? " is-dragging" : ""}`}
       style={
         {
           "--g": `var(--c-${color})`,
-          animationDelay: `${Math.min(index, 11) * 20}ms`,
           transform: CSS.Transform.toString(sortable.transform),
           transition: sortable.transition,
         } as CSSProperties
       }
       data-down={health?.status === "down" ? "true" : undefined}
-      data-edit={editing ? "true" : undefined}
-      href={app.url}
-      target={openIn === "newTab" ? "_blank" : undefined}
-      rel="noopener"
       onContextMenu={(event) => {
+        if ((event.target as HTMLElement).closest("a, button")) return;
         event.preventDefault();
         onOpenMenu(app, { x: event.clientX, y: event.clientY });
       }}
     >
-      <div className="card-cover">
-        <Cover app={app} color={color} />
-        <span
-          className="dot card-dot"
-          role="img"
-          aria-label={statusText(health)}
-          title={statusText(health)}
-          style={{ "--status": statusVar(health) } as CSSProperties}
-        />
-      </div>
-      <div className="card-body">
-        <span className="card-name">{app.name}</span>
-        {app.description && <span className="card-desc">{app.description}</span>}
-        {health?.status === "down" && <span className="card-down-label">Sin respuesta</span>}
-        <div className="card-foot">
-          {app.tags.map((tag) => (
-            <span key={tag} className="chip" data-tag={tag}>
-              {tag}
+      {view === "compact" ? (
+        <a {...linkProps}>
+          <span className="compact-identity">
+            <AppIdentity app={app} color={color} size={38} radius={10} />
+          </span>
+          <span className="compact-main">
+            <span className="card-name">{app.name}</span>
+            {app.description && <span className="card-desc">{app.description}</span>}
+            <span className="compact-meta">
+              {env && (
+                <span className="chip" data-tag={env}>
+                  {env}
+                </span>
+              )}
+              <span className="status-inline" data-status={health?.status ?? "unknown"}>
+                <span
+                  className="dot"
+                  style={{ "--status": statusVar(health) } as CSSProperties}
+                  aria-hidden="true"
+                />
+                {word}
+              </span>
             </span>
-          ))}
-          {service?.state === "active" && service.memoryBytes != null && (
+          </span>
+        </a>
+      ) : (
+        <a {...linkProps}>
+          <span className="card-cover">
+            <Cover app={app} color={color} />
             <span
-              className="card-res"
-              title={`${app.service}: ${fmtBytes(service.memoryBytes)} de RAM, ${fmtCpu(service.cpuPercent)}% de CPU del total de la VM`}
-            >
-              {fmtBytes(service.memoryBytes)} · {fmtCpu(service.cpuPercent)}%
-            </span>
-          )}
-          <span className="card-host">{hostOf(app.url)}</span>
-        </div>
-      </div>
-      <div className="card-actions">
-        {app.service && (
-          <button
-            type="button"
-            className="card-action-btn"
-            aria-label={service?.state === "active" ? `Apagar ${app.name}` : `Encender ${app.name}`}
-            title={service?.state === "active" ? `Apagar ${app.name}` : `Encender ${app.name}`}
-            disabled={powering}
-            onClick={(event) => void onPower(event)}
-          >
-            <Power
-              size={16}
-              strokeWidth={1.75}
-              style={service?.state === "active" ? { color: "var(--ok)" } : undefined}
+              className="dot card-dot"
+              role="img"
+              aria-label={statusText(health)}
+              title={statusText(health)}
+              style={{ "--status": statusVar(health) } as CSSProperties}
             />
-          </button>
-        )}
-        {editing && (
-          <button
-            type="button"
-            className="card-action-btn drag-handle"
-            aria-label={`Arrastrar ${app.name}`}
-            onClick={stop}
-            onContextMenu={stop}
-            {...sortable.attributes}
-            {...sortable.listeners}
-          >
-            <GripVertical size={16} strokeWidth={1.75} />
-          </button>
-        )}
-        <button
-          type="button"
-          className="card-action-btn"
-          aria-label={`Menú de ${app.name}`}
-          onClick={(event) => {
-            stop(event);
-            const rect = event.currentTarget.getBoundingClientRect();
-            onOpenMenu(app, { x: rect.left, y: rect.bottom + 6 });
-          }}
-        >
-          <MoreHorizontal size={16} strokeWidth={1.75} />
-        </button>
-      </div>
-    </a>
+          </span>
+          <span className="card-body">
+            <span className="card-name">{app.name}</span>
+            {app.description && <span className="card-desc">{app.description}</span>}
+            <span className="card-foot">
+              {env && (
+                <span className="chip" data-tag={env}>
+                  {env}
+                </span>
+              )}
+              <span className="status-inline" data-status={health?.status ?? "unknown"}>
+                <span
+                  className="dot"
+                  style={{ "--status": statusVar(health) } as CSSProperties}
+                  aria-hidden="true"
+                />
+                {word}
+              </span>
+            </span>
+          </span>
+        </a>
+      )}
+      {actions}
+    </div>
   );
 }

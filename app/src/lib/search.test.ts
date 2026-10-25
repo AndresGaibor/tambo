@@ -71,6 +71,29 @@ describe("filterGroups", () => {
   });
 });
 
+describe("ranking", () => {
+  it("exacto y prefijo antes que subsecuencia y campos secundarios", () => {
+    const config = configSchema.parse({
+      version: 1,
+      settings: {},
+      groups: [group, otros],
+    });
+    const filtered = filterGroups(config.groups, "erp");
+    // "ERP" es exacto en el grupo elcaliz; "Delegation Monitor" no coincide;
+    // la app con prefijo va antes que una por subsecuencia.
+    expect(filtered[0].apps[0].name).toBe("ERP");
+    const porDescripcion = filterGroups(config.groups, "plataforma");
+    expect(porDescripcion[0].apps[0].name).toBe("Admin de la plataforma");
+  });
+
+  it("no duplica apps: con búsqueda activa el orden por grupo se conserva", () => {
+    const config = configSchema.parse({ version: 1, settings: {}, groups: [group] });
+    const filtered = filterGroups(config.groups, "e");
+    const ids = filtered.flatMap((g) => g.apps.map((a) => a.id));
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
 describe("firstMatch", () => {
   it("devuelve la primera app visible para Enter", () => {
     const config = configSchema.parse({

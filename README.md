@@ -62,6 +62,35 @@ pnpm icons      # regenera los PNG de la PWA (sharp)
 | `GET /shots/<id>.webp`, `GET /assets/*` | Estáticos de `data/` con lista cerrada |
 | `POST /api/assets?name=slug.svg` | Sube SVG/PNG/WebP de hasta 2 MB (fase 2) |
 
+## Interfaz
+
+- **Vista compacta (por defecto) y vista Portadas**: la preferencia vive por
+  navegador en `localStorage` (`tambo.view`), nunca en `apps.json`; lo mismo
+  para el tema (`tambo.theme`), los grupos colapsados (`tambo.collapsed`) y el
+  interruptor de atajos `e`/`t`/`1-9` (`tambo.shortcuts`). Toda lectura y
+  escritura de almacenamiento lleva manejo de errores: si falla, la sesión
+  usa los valores por omisión.
+- **Identidad de una app** (igual en anclados y tarjetas): primero el recurso
+  propio (`cover` svg/image), luego el icono configurado (`icon`:
+  `lucide:<nombre>` o emoji), y como respaldo la inicial. No se descargan
+  favicons: esa función no existe.
+- **Estados**: Activa, Sin respuesta (tras dos fallos consecutivos del
+  servidor), Sin comprobar (sin chequeo aún) y el aviso global de datos
+  desactualizados cuando falla la actualización de salud, que conserva los
+  últimos valores y ofrece Reintentar.
+- **Recursos**: el porcentaje de CPU es del total de la VM (todos sus
+  núcleos), promediado entre muestreos de 15 s; la RAM es la memoria anónima
+  del cgroup de la unidad. Cuando una unidad sirve a varias apps (El Cáliz
+  comparte `elcaliz-dev.service`), sus contadores son del conjunto y no se
+  atribuyen a cada app: en Detalles se muestra "No disponible por app" con la
+  explicación, y el total de la máquina vive en el control "Servidor OCI" del
+  encabezado. El origen de las cifras es siempre el host de la VM, nunca el
+  MacBook.
+- **Atajos**: `/` y Cmd+K (Ctrl K fuera de macOS) enfocan la búsqueda;
+  Escape cierra primero el menú o panel superior y después limpia la
+  búsqueda; `e`, `t` y `1-9` son conmutables y no actúan nunca mientras se
+  escribe o se compone texto (IME).
+
 ## Encendido, apagado y recursos desde el portal
 
 Una app puede declarar su unidad systemd **de usuario** en `apps.json`:

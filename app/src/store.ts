@@ -5,6 +5,9 @@ import type { MachineStats } from "../server/stats";
 import type { TamboConfig } from "./schema";
 
 export type ThemeMode = "dark" | "light" | "system";
+export type ViewMode = "compact" | "covers";
+export type SaveStatus = "idle" | "saving" | "saved" | "error";
+export type DetailsState = { appId: string | null };
 
 export type DrawerState =
   | { mode: "closed" }
@@ -16,6 +19,7 @@ function readJson<T>(key: string, fallback: T): T {
     const raw = localStorage.getItem(key);
     return raw === null ? fallback : (JSON.parse(raw) as T);
   } catch {
+    // Almacenamiento ausente o corrupto: se usa el valor por omisión.
     return fallback;
   }
 }
@@ -24,17 +28,13 @@ function writeJson(key: string, value: unknown): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // localStorage puede no estar disponible; el colapso no es crítico.
+    // Sin almacenamiento la preferencia vive solo en esta sesión.
   }
 }
 
-function readThemeOverride(): ThemeMode | null {
-  try {
-    const raw = localStorage.getItem("tambo.theme");
-    return raw === "dark" || raw === "light" || raw === "system" ? raw : null;
-  } catch {
-    return null;
-  }
+function readStored<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
+  const raw = readJson<T>(key, fallback);
+  return (allowed as readonly string[]).includes(raw) ? raw : fallback;
 }
 
 type TamboState = {
@@ -43,17 +43,26 @@ type TamboState = {
   health: Record<string, HealthEntry>;
   services: Record<string, ServiceEntry>;
   machine: MachineStats | null;
+  /** Momento (Date.now) del último /api/health exitoso; 0 si nunca. */
+  healthUpdatedAt: number;
+  /** true cuando la última actualización de salud falló: datos viejos. */
+  healthStale: boolean;
   online: boolean;
   loadError: string | null;
   saveError: string | null;
   actionError: string | null;
   saving: boolean;
+  saveStatus: SaveStatus;
   conflict: boolean;
   query: string;
   editing: boolean;
   drawer: DrawerState;
+  details: DetailsState;
   collapsed: string[];
   theme: ThemeMode;
+  view: ViewMode;
+  /** Atajos globales e, t y 1-9; siempre se respetan / y Cmd+K. */
+  shortcuts: boolean;
 
   applyConfig: (config: TamboConfig, etag: string) => void;
   load: () => Promise<void>;
@@ -66,8 +75,11 @@ type TamboState = {
   setEditing: (editing: boolean) => void;
   openDrawer: (drawer: DrawerState) => void;
   closeDrawer: () => void;
+  openDetails: (appId: string | null) => void;
   toggleCollapse: (groupId: string) => void;
   setTheme: (theme: ThemeMode) => void;
+  setView: (view: ViewMode) => void;
+  setShortcuts: (enabled: boolean) => void;
   resolveConflict: () => void;
 };
 
@@ -77,24 +89,31 @@ export const useStore = create<TamboState>((set, get) => ({
   health: {},
   services: {},
   machine: null,
+  healthUpdatedAt: 0,
+  healthStale: false,
   online: true,
   loadError: null,
   saveError: null,
   actionError: null,
   saving: false,
+  saveStatus: "idle",
   conflict: false,
   query: "",
   editing: false,
   drawer: { mode: "closed" },
+  details: { appId: null },
   collapsed: readJson<string[]>("tambo.collapsed", []),
-  theme: readThemeOverride() ?? "system",
+  theme: readStored<ThemeMode>("tambo.theme", ["dark", "light", "system"], "system"),
+  view: readStored<ViewMode>("tambo.view", ["compact", "covers"], "compact"),
+  shortcuts: readJson<boolean>("tambo.shortcuts", true),
 
   applyConfig: (config, etag) => {
-    const override = readThemeOverride();
     set({
       config,
       etag,
-      theme: override ?? config.settings.theme,
+      theme:
+        readStored<ThemeMode>("tambo.theme", ["dark", "light", "system"], "system") ??
+        config.settings.theme,
       loadError: null,
     });
   },
@@ -119,11 +138,16 @@ export const useStore = create<TamboState>((set, get) => ({
   loadHealth: async () => {
     try {
       const response = await fetch("/api/health");
-      if (!response.ok) return;
+      if (!response.ok) {
+        set({ healthStale: true });
+        return;
+      }
       const health = (await response.json()) as Record<string, HealthEntry>;
-      set({ health, online: true });
+      set({ health, online: true, healthStale: false, healthUpdatedAt: Date.now() });
     } catch {
-      set({ online: false });
+      // Fallo solo de salud: se conservan los últimos datos y se marca que
+      // están desactualizados; la conexión del portal no cambia por esto.
+      set({ healthStale: true });
     }
   },
 
@@ -176,7 +200,7 @@ export const useStore = create<TamboState>((set, get) => ({
   save: async (next) => {
     const { etag, config } = get();
     if (!config || !etag) return false;
-    set({ saving: true, saveError: null, config: next });
+    set({ saving: true, saveStatus: "saving", saveError: null, config: next });
     try {
       const response = await fetch("/api/config", {
         method: "PUT",
@@ -188,23 +212,27 @@ export const useStore = create<TamboState>((set, get) => ({
         body: JSON.stringify(next),
       });
       if (response.status === 412) {
-        set({ saving: false, conflict: true });
+        set({ saving: false, saveStatus: "error", conflict: true });
         return false;
       }
       if (!response.ok) {
         const body = (await response.json().catch(() => ({}))) as { error?: string };
         set({
           saving: false,
+          saveStatus: "error",
           saveError: body.error ?? `no se pudo guardar (error ${response.status})`,
           config,
         });
         return false;
       }
       const body = (await response.json()) as { etag: string };
-      set({ saving: false, conflict: false, config: next, etag: body.etag });
+      set({ saving: false, saveStatus: "saved", conflict: false, config: next, etag: body.etag });
+      setTimeout(() => {
+        if (useStore.getState().saveStatus === "saved") useStore.setState({ saveStatus: "idle" });
+      }, 2_500);
       return true;
     } catch {
-      set({ saving: false, online: false, config });
+      set({ saving: false, saveStatus: "error", online: false, config });
       return false;
     }
   },
@@ -217,6 +245,8 @@ export const useStore = create<TamboState>((set, get) => ({
 
   closeDrawer: () => set({ drawer: { mode: "closed" } }),
 
+  openDetails: (appId) => set({ details: { appId } }),
+
   toggleCollapse: (groupId) => {
     const collapsed = get().collapsed.includes(groupId)
       ? get().collapsed.filter((id) => id !== groupId)
@@ -227,11 +257,17 @@ export const useStore = create<TamboState>((set, get) => ({
 
   setTheme: (theme) => {
     set({ theme });
-    try {
-      localStorage.setItem("tambo.theme", theme);
-    } catch {
-      // sin localStorage se aplica solo por esta sesión
-    }
+    writeJson("tambo.theme", theme);
+  },
+
+  setView: (view) => {
+    set({ view });
+    writeJson("tambo.view", view);
+  },
+
+  setShortcuts: (shortcuts) => {
+    set({ shortcuts });
+    writeJson("tambo.shortcuts", shortcuts);
   },
 
   resolveConflict: () => {

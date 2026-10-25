@@ -25,6 +25,7 @@ type AppForm = {
   healthUrl: string;
   healthExpect: string;
   service: string;
+  icon: string;
 };
 
 type GroupForm = { name: string; color: GroupColor; icon: string };
@@ -41,6 +42,7 @@ const EMPTY_APP: AppForm = {
   healthUrl: "",
   healthExpect: "",
   service: "",
+  icon: "",
 };
 
 function appToForm(app: AppEntry): AppForm {
@@ -60,6 +62,7 @@ function appToForm(app: AppEntry): AppForm {
         ? String(app.health.expect)
         : `${app.health.expect[0]}-${app.health.expect[1]}`,
     service: app.service ?? "",
+    icon: app.icon ?? "",
   };
 }
 
@@ -102,28 +105,51 @@ export function EditDrawer() {
   const [groupId, setGroupId] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [initialApp, setInitialApp] = useState<AppForm>(EMPTY_APP);
+  const [initialGroup, setInitialGroup] = useState<GroupForm>({
+    name: "",
+    color: "gold",
+    icon: "",
+  });
 
   useEffect(() => {
     setErrors({});
     setUploadError(null);
+    setConfirmDiscard(false);
     if (drawer.mode === "app") {
       const found = drawer.appId && config ? findApp(config, drawer.appId) : null;
-      setAppForm(found ? appToForm(found.app) : EMPTY_APP);
+      const snapshot = found ? appToForm(found.app) : EMPTY_APP;
+      setAppForm(snapshot);
+      setInitialApp(snapshot);
       setGroupId(drawer.groupId);
     } else if (drawer.mode === "group") {
       const group =
         drawer.groupId && config
           ? config.groups.find((candidate) => candidate.id === drawer.groupId)
           : null;
-      setGroupForm(
-        group
-          ? { name: group.name, color: group.color, icon: group.icon ?? "" }
-          : { name: "", color: config ? nextColor(config) : "gold", icon: "" },
-      );
+      const snapshot = group
+        ? { name: group.name, color: group.color, icon: group.icon ?? "" }
+        : { name: "", color: config ? nextColor(config) : "gold", icon: "" };
+      setGroupForm(snapshot);
+      setInitialGroup(snapshot);
     }
   }, [drawer, config]);
 
   const setApp = (patch: Partial<AppForm>) => setAppForm((form) => ({ ...form, ...patch }));
+
+  // Cierre con borrador pendiente: se pide confirmación antes de descartar.
+  const requestClose = () => {
+    const dirty = isApp
+      ? JSON.stringify(appForm) !== JSON.stringify(initialApp)
+      : JSON.stringify(groupForm) !== JSON.stringify(initialGroup);
+    if (dirty && !confirmDiscard) {
+      setConfirmDiscard(true);
+      return;
+    }
+    setConfirmDiscard(false);
+    closeDrawer();
+  };
 
   const buildApp = (): AppEntry | { errors: Record<string, string> } => {
     if (!config) return { errors: { name: "sin configuración" } };
@@ -166,6 +192,7 @@ export function EditDrawer() {
           }
         : {}),
       ...(appForm.service.trim() ? { service: appForm.service.trim() } : {}),
+      ...(appForm.icon.trim() ? { icon: appForm.icon.trim() } : {}),
     };
     return app;
   };
@@ -217,8 +244,8 @@ export function EditDrawer() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeDrawer();
+      if (event.key === "Escape" && !(event as KeyboardEventInit).isComposing) {
+        requestClose();
         return;
       }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
@@ -271,7 +298,7 @@ export function EditDrawer() {
 
   return (
     <>
-      <div className="drawer-backdrop" onClick={closeDrawer} aria-hidden="true" />
+      <div className="drawer-backdrop" onClick={requestClose} aria-hidden="true" />
       <aside className="drawer" role="dialog" aria-label={isApp ? "Editar app" : "Editar grupo"}>
         <header className="drawer-head">
           <h2 className="drawer-title">
@@ -295,10 +322,45 @@ export function EditDrawer() {
         <div className="drawer-body">
           {conflict && (
             <div className="drawer-conflict">
-              La configuración cambió en el servidor mientras editabas.
-              <button type="button" className="btn" onClick={resolveConflict}>
-                Recargar
-              </button>
+              <p>
+                La configuración cambió fuera de esta sesión mientras editabas. Tu borrador se
+                conserva en este panel; no se ha sobrescrito nada.
+              </p>
+              <div className="conflict-actions">
+                <button type="button" className="btn" onClick={() => submit()}>
+                  Reintentar con mi versión
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    resolveConflict();
+                    closeDrawer();
+                  }}
+                >
+                  Descartar mi borrador y recargar
+                </button>
+              </div>
+            </div>
+          )}
+          {confirmDiscard && (
+            <div className="drawer-conflict">
+              <p>Hay cambios sin guardar en este panel.</p>
+              <div className="conflict-actions">
+                <button type="button" className="btn" onClick={() => setConfirmDiscard(false)}>
+                  Seguir editando
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    setConfirmDiscard(false);
+                    closeDrawer();
+                  }}
+                >
+                  Descartar cambios
+                </button>
+              </div>
             </div>
           )}
           {saveError && <div className="drawer-conflict">{saveError}</div>}
@@ -335,9 +397,21 @@ export function EditDrawer() {
                   onChange={(e) => setApp({ description: e.target.value })}
                 />
               </div>
+              <div className="field">
+                <label htmlFor="f-icon">Icono (opcional)</label>
+                <input
+                  id="f-icon"
+                  placeholder="lucide:rocket o un emoji"
+                  value={appForm.icon}
+                  onChange={(e) => setApp({ icon: e.target.value })}
+                />
+                {errors.icon && <span className="field-error">{errors.icon}</span>}
+              </div>
               <div className="field-row">
                 <div className="field">
-                  <label htmlFor="f-group">Grupo</label>
+                  <label htmlFor="f-group">
+                    {drawer.mode === "app" && drawer.appId ? "Mover a grupo" : "Grupo"}
+                  </label>
                   <select id="f-group" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
                     {config?.groups.map((group) => (
                       <option key={group.id} value={group.id}>
@@ -512,7 +586,7 @@ export function EditDrawer() {
             </button>
           )}
           <span style={{ flex: 1 }} />
-          <button type="button" className="btn" onClick={closeDrawer}>
+          <button type="button" className="btn" onClick={requestClose}>
             Cancelar
           </button>
           <button type="button" className="btn btn-accent" disabled={saving} onClick={submit}>

@@ -1,10 +1,11 @@
 import { useEffect, useRef } from "react";
-import { Link2, Pencil, Pin, PinOff, Power, Trash2 } from "lucide-react";
+import { Copy, Info, Pencil, Pin, PinOff, Power, Trash2 } from "lucide-react";
 import type { AppEntry } from "../schema";
 import { findApp } from "../schema";
 import { removeApp, setPinned } from "../lib/edit";
 import { useStore } from "../store";
 
+/** Menú contextual de una app. Accesible por teclado y sin depender del clic derecho. */
 export function AppMenu({
   app,
   x,
@@ -17,14 +18,26 @@ export function AppMenu({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<Element | null>(null);
   const editing = useStore((s) => s.editing);
+
+  // El control que abrió el menú se captura una sola vez: StrictMode y los
+  // re-registros del oyente no deben recapturarlo con el foco ya dentro.
+  useEffect(() => {
+    if (!openerRef.current) openerRef.current = document.activeElement;
+    const first = ref.current?.querySelector<HTMLButtonElement>("button");
+    first?.focus();
+  }, []);
 
   useEffect(() => {
     const onDown = (event: MouseEvent) => {
       if (!ref.current?.contains(event.target as Node)) onClose();
     };
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !event.isComposing) {
+        onClose();
+        (openerRef.current as HTMLElement | null)?.focus?.();
+      }
     };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
@@ -34,50 +47,63 @@ export function AppMenu({
     };
   }, [onClose]);
 
+  const finish = () => {
+    onClose();
+    (openerRef.current as HTMLElement | null)?.focus?.();
+  };
+
   const onCopyUrl = async () => {
     try {
       await navigator.clipboard.writeText(app.url);
     } catch {
       // sin permiso de portapapeles no hay nada más que hacer
     }
-    onClose();
+    finish();
   };
 
   const onTogglePin = () => {
     const { config, save } = useStore.getState();
     if (config) void save(setPinned(config, app.id, !app.pinned));
-    onClose();
+    finish();
   };
 
   const onEdit = () => {
     const { config, openDrawer } = useStore.getState();
     const found = config ? findApp(config, app.id) : null;
     if (found) openDrawer({ mode: "app", appId: app.id, groupId: found.group.id });
-    onClose();
+    finish();
   };
 
   const onRemove = () => {
     const { config, save } = useStore.getState();
     if (config) void save(removeApp(config, app.id));
-    onClose();
+    finish();
   };
 
   const onPower = () => {
     const { services, powerAction } = useStore.getState();
     const active = services[app.id]?.state === "active";
     if (app.service) void powerAction(app.id, active ? "stop" : "start");
-    onClose();
+    finish();
+  };
+
+  const onDetails = () => {
+    useStore.getState().openDetails(app.id);
+    finish();
   };
 
   const style = {
     left: Math.min(x, window.innerWidth - 210),
-    top: Math.min(y, window.innerHeight - 170),
+    top: Math.min(y, window.innerHeight - 190),
   };
 
   return (
     <div className="menu" role="menu" style={style} ref={ref}>
       <button type="button" className="menu-item" role="menuitem" onClick={() => void onCopyUrl()}>
-        <Link2 size={15} strokeWidth={1.75} /> Copiar URL
+        <Copy size={15} strokeWidth={1.75} /> Copiar URL
+      </button>
+      <button type="button" className="menu-item" role="menuitem" onClick={onDetails}>
+        <Info size={15} strokeWidth={1.75} /> Detalles
       </button>
       <button type="button" className="menu-item" role="menuitem" onClick={onTogglePin}>
         {app.pinned ? (

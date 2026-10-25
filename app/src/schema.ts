@@ -54,6 +54,9 @@ export const appSchema = z.strictObject({
   health: healthSchema.optional(),
   // Unidad systemd de usuario que enciende esta app desde el portal.
   service: unitName.optional(),
+  // Icono estable de la app: "lucide:<nombre>" o un emoji. La identidad
+  // visual prioriza cover svg/image, luego este icono, luego la inicial.
+  icon: z.string().max(64).optional(),
 });
 export type AppEntry = z.output<typeof appSchema>;
 

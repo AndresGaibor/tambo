@@ -73,12 +73,17 @@ export function EditableBoard({
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={onDragEnd}>
+      <p className="edit-hint">
+        Modo edición: arrastra el asa de una tarjeta o grupo, o enfócala, pulsa Espacio o Enter y
+        usa las flechas para moverla. También puedes abrir el menú y usar “Editar” para moverla de
+        grupo con el formulario.
+      </p>
       <SortableContext
         items={config.groups.map((group) => group.id)}
         strategy={verticalListSortingStrategy}
       >
-        {config.groups.map((group, index) => (
-          <GroupSection key={group.id} group={group} index={index} onOpenMenu={onOpenMenu} />
+        {config.groups.map((group) => (
+          <GroupSection key={group.id} group={group} view="compact" onOpenMenu={onOpenMenu} />
         ))}
       </SortableContext>
       <button

@@ -9,6 +9,7 @@ import { PinnedRow } from "./components/PinnedRow";
 import { GroupSection } from "./components/GroupSection";
 import { EditableBoard } from "./components/EditableBoard";
 import { EditDrawer } from "./components/EditDrawer";
+import { DetailsDrawer } from "./components/DetailsDrawer";
 import { ErrorBanner } from "./components/ErrorBanner";
 import { EmptyState } from "./components/EmptyState";
 import { AppMenu } from "./components/AppMenu";
@@ -19,11 +20,14 @@ export default function App() {
   const config = useStore((s) => s.config);
   const query = useStore((s) => s.query);
   const editing = useStore((s) => s.editing);
-  const drawerOpen = useStore((s) => s.drawer.mode !== "closed");
+  const view = useStore((s) => s.view);
+  const shortcuts = useStore((s) => s.shortcuts);
   const loadError = useStore((s) => s.loadError);
   const load = useStore((s) => s.load);
   const loadHealth = useStore((s) => s.loadHealth);
   const theme = useStore((s) => s.theme);
+  const drawerOpen = useStore((s) => s.drawer.mode !== "closed");
+  const detailsOpen = useStore((s) => s.details.appId !== null);
   const [menu, setMenu] = useState<{ app: AppEntry; point: MenuPoint } | null>(null);
   const menuRef = useRef(menu);
   menuRef.current = menu;
@@ -63,11 +67,13 @@ export default function App() {
       .forEach((meta) => meta.setAttribute("content", light ? "#F7F5F0" : "#0B0D12"));
   }, [theme]);
 
-  // Atajos: / o Cmd+K busca, 1-9 abre ancladas, e edita, t cambia el tema.
+  // Atajos: / o Cmd+K buscan siempre; e, t y 1-9 son conmutables y nunca
+  // actúan mientras se escribe, se compone texto (IME) o hay modificadores.
   useEffect(() => {
     const focusSearch = () =>
       document.querySelector<HTMLInputElement>("[data-search-input]")?.focus();
     const onKey = (event: KeyboardEvent) => {
+      if (event.isComposing) return;
       const target = event.target as HTMLElement | null;
       const typing =
         !!target &&
@@ -81,10 +87,15 @@ export default function App() {
         return;
       }
       if (event.key === "Escape") {
-        if (menuRef.current) return; // el menú se cierra solo
+        // Cascada: primero el menú o panel superior, después la búsqueda.
+        if (menuRef.current) return; // el menú se cierra y devuelve el foco solo
         const state = useStore.getState();
-        if (state.drawer.mode !== "closed") state.closeDrawer();
-        else if (typing) {
+        if (state.details.appId) {
+          state.openDetails(null);
+          return;
+        }
+        if (state.drawer.mode !== "closed") return; // el panel lo maneja su efecto
+        if (typing) {
           const input = target as HTMLInputElement | null;
           if (input?.value) state.setQuery("");
           else input?.blur();
@@ -98,6 +109,7 @@ export default function App() {
         return;
       }
       const state = useStore.getState();
+      if (!state.shortcuts) return;
       if (event.key === "e") {
         state.setEditing(!state.editing);
         return;
@@ -117,17 +129,18 @@ export default function App() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [shortcuts]);
 
   const filtered = useMemo(() => filterGroups(config?.groups ?? [], query), [config, query]);
   const hasApps = !!config && flattenApps(config).length > 0;
+  const searching = query.trim().length > 0;
   const openMenu = (app: AppEntry, point: MenuPoint) => setMenu({ app, point });
 
   return (
     <>
       <Header />
       <ErrorBanner />
-      <main className="main">
+      <main className="main" data-view={view}>
         {!config && !loadError && (
           <div className="splash">
             <Logo size={48} />
@@ -136,17 +149,26 @@ export default function App() {
         {config && !hasApps && <EmptyState />}
         {config && hasApps && (
           <>
-            <PinnedRow />
+            {/* Con búsqueda activa la fila de anclados se oculta: los
+                resultados ya están a la vista y ninguna app se duplica. */}
+            {!searching && <PinnedRow onOpenMenu={openMenu} />}
             {editing ? (
               <EditableBoard onOpenMenu={openMenu} />
             ) : (
               <>
-                {filtered.map((group, index) => (
-                  <GroupSection key={group.id} group={group} index={index} onOpenMenu={openMenu} />
+                {filtered.map((group) => (
+                  <GroupSection key={group.id} group={group} view={view} onOpenMenu={openMenu} />
                 ))}
-                {query && filtered.length === 0 && (
+                {searching && filtered.length === 0 && (
                   <div className="empty">
-                    <p>Sin resultados para «{query}»</p>
+                    <p>No hay aplicaciones para «{query}»</p>
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => useStore.getState().setQuery("")}
+                    >
+                      Limpiar búsqueda
+                    </button>
                   </div>
                 )}
               </>
@@ -158,6 +180,7 @@ export default function App() {
         <AppMenu app={menu.app} x={menu.point.x} y={menu.point.y} onClose={() => setMenu(null)} />
       )}
       {drawerOpen && <EditDrawer />}
+      {detailsOpen && <DetailsDrawer />}
     </>
   );
 }

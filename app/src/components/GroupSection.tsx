@@ -3,7 +3,7 @@ import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sort
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, GripVertical, Plus, icons } from "lucide-react";
 import type { Group } from "../schema";
-import { useStore } from "../store";
+import { useStore, type ViewMode } from "../store";
 import { AppCard, type MenuPoint } from "./AppCard";
 
 function GroupIcon({ icon }: { icon?: string }) {
@@ -24,16 +24,17 @@ function GroupIcon({ icon }: { icon?: string }) {
 
 export function GroupSection({
   group,
-  index,
+  view,
   onOpenMenu,
 }: {
   group: Group;
-  index: number;
+  view: ViewMode;
   onOpenMenu: (app: Group["apps"][number], point: MenuPoint) => void;
 }) {
   const collapsed = useStore((s) => s.collapsed.includes(group.id));
   const editing = useStore((s) => s.editing);
   const toggleCollapse = useStore((s) => s.toggleCollapse);
+  const openDetails = useStore((s) => s.openDetails);
   const openDrawer = useStore((s) => s.openDrawer);
   const sortable = useSortable({ id: group.id, data: { type: "group" }, disabled: !editing });
 
@@ -89,14 +90,15 @@ export function GroupSection({
           </button>
         </header>
         <div className="group-grid">
-          {group.apps.map((app, appIndex) => (
+          {group.apps.map((app) => (
             <AppCard
               key={app.id}
               app={app}
               group={group}
               color={group.color}
-              index={index * 6 + appIndex}
+              view={view}
               onOpenMenu={onOpenMenu}
+              onOpenDetails={openDetails}
             />
           ))}
           {editing && (
