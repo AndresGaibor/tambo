@@ -1,0 +1,44 @@
+services:
+  caddy:
+    build: ./caddy
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      DNS_API_TOKEN: ${DNS_API_TOKEN:?falta DNS_API_TOKEN en .env}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  tambo:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.dev
+    network_mode: host
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      TAMBO_DATA_DIR: /data
+      TAMBO_PORT: "15170"
+      # Detrás de Caddy el websocket del HMR entra por el 443.
+      TAMBO_HMR_CLIENT_PORT: "443"
+    volumes:
+      - ./app:/app
+      - ./data:/data
+      - /app/node_modules
+
+  # Fase 3: capturas con Playwright bajo el perfil tools, cuando exista
+  # tools/shots.ts:
+  #   shots:
+  #     profile: tools
+  #     image: mcr.microsoft.com/playwright:v1.58.0
+  #     network_mode: host
+  #     working_dir: /work
+  #     volumes:
+  #       - ./tools:/work
+  #       - ./data:/data
+  #     command: ["npx", "tsx", "shots.ts"]
+
+volumes:
+  caddy_data:
+  caddy_config:

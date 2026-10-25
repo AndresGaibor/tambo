@@ -1,0 +1,42 @@
+{
+    acme_dns cloudflare {env.DNS_API_TOKEN}
+}
+
+(tailnet) {
+    bind 100.114.65.117
+}
+
+tambo.lab.andresgaibor.com {
+    import tailnet
+    reverse_proxy 127.0.0.1:15170
+}
+
+erp.elcaliz.lab.andresgaibor.com {
+    import tailnet
+    reverse_proxy 127.0.0.1:15173
+}
+
+admin.elcaliz.lab.andresgaibor.com {
+    import tailnet
+    reverse_proxy 127.0.0.1:15174
+}
+
+api.elcaliz.lab.andresgaibor.com {
+    import tailnet
+    reverse_proxy 127.0.0.1:18787
+}
+
+sb.elcaliz.lab.andresgaibor.com {
+    import tailnet
+    reverse_proxy 127.0.0.1:6006
+}
+
+asistente.elcaliz.lab.andresgaibor.com {
+    import tailnet
+    reverse_proxy 127.0.0.1:5174
+}
+
+dmon.lab.andresgaibor.com {
+    import tailnet
+    reverse_proxy 127.0.0.1:5173
+}
