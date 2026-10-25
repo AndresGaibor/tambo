@@ -43,16 +43,9 @@ export function AppIdentity({
   } as React.CSSProperties;
   const glyph = Math.round(size * 0.62);
 
-  if (app.cover.kind === "svg" || app.cover.kind === "image") {
-    return (
-      <span className="identity" style={style} aria-hidden="true">
-        <img src={`/assets/${app.cover.src}`} alt="" loading="lazy" />
-      </span>
-    );
-  }
-
   // Logo oficial de una app (p. ej. Storybook): su color propio, sin teñir
-  // de dorado ni del color del grupo.
+  // de dorado ni del color del grupo. Tiene prioridad sobre la portada para
+  // que el logo oficial siempre se muestre cuando está configurado.
   if (app.icon?.startsWith("brand:")) {
     const file = app.icon.slice("brand:".length);
     if (/^[a-z0-9-]+\.svg$/.test(file)) {
@@ -62,6 +55,14 @@ export function AppIdentity({
         </span>
       );
     }
+  }
+
+  if (app.cover.kind === "svg" || app.cover.kind === "image") {
+    return (
+      <span className="identity" style={style} aria-hidden="true">
+        <img src={`/assets/${app.cover.src}`} alt="" loading="lazy" />
+      </span>
+    );
   }
 
   if (app.icon?.startsWith("tambo:")) {

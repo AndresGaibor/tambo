@@ -429,7 +429,13 @@ export const useStore = create<TamboState>((set, get) => ({
     const { previousConfig, config } = get();
     if (!previousConfig) return;
     set({ config: previousConfig, previousConfig: config, canUndo: false });
-    get().pushToast("Cambio deshecho", "info");
+    // Persistir el deshacer en el servidor para que no se revierta.
+    void get()
+      .save(previousConfig)
+      .then((ok) => {
+        if (ok) get().pushToast("Cambio deshecho", "info");
+        else get().pushToast("No se pudo deshacer en el servidor", "down");
+      });
   },
 
   pushToast: (message, tone = "info") => {
@@ -533,18 +539,27 @@ export const useStore = create<TamboState>((set, get) => ({
     const { selectedApps } = get();
     if (selectedApps.size === 0) return;
     const ids = [...selectedApps];
-    await Promise.all(
+    const results = await Promise.all(
       ids.map(async (appId) => {
         try {
-          await fetch(`/api/services/${appId}`, {
+          const res = await fetch(`/api/services/${appId}`, {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-Tambo": "1" },
             body: JSON.stringify({ action }),
           });
-        } catch {}
+          return res.ok;
+        } catch {
+          return false;
+        }
       }),
     );
-    get().pushToast(`${ids.length} apps ${action === "start" ? "despertadas" : "apagadas"}`, "ok");
+    const ok = results.filter(Boolean).length;
+    const fail = results.length - ok;
+    if (fail === 0) {
+      get().pushToast(`${ok} apps ${action === "start" ? "despertadas" : "apagadas"}`, "ok");
+    } else {
+      get().pushToast(`${ok} ok, ${fail} fallaron`, fail === results.length ? "down" : "warn");
+    }
     get().clearSelection();
     void get().loadServices();
   },

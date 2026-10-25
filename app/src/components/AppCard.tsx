@@ -129,15 +129,17 @@ function AppCardImpl({
     if (sablier && !sablier.sessionActive && app.service) {
       event.preventDefault();
       setWaking(true);
+      const healthUrl = app.health?.url ?? "";
+      const wakeUrl = `/wake.html?name=${encodeURIComponent(app.name)}&url=${encodeURIComponent(app.url)}&health=${encodeURIComponent(healthUrl)}`;
+      // Abrir la pestaña de inmediato (sincrónico) para evitar que el
+      // navegador bloquee la ventana emergente tras el await.
+      const win = window.open(wakeUrl, "_blank", "noopener");
       try {
         await powerAction(app.id, "start");
-        const healthUrl = app.health?.url ?? "";
-        const wakeUrl = `/wake.html?name=${encodeURIComponent(app.name)}&url=${encodeURIComponent(app.url)}&health=${encodeURIComponent(healthUrl)}`;
-        window.open(wakeUrl, "_blank", "noopener");
         setWaking(false);
       } catch {
         setWaking(false);
-        window.open(app.url, openIn === "newTab" ? "_blank" : "_self", "noopener");
+        if (win) win.location.href = app.url;
       }
     }
   };
@@ -148,16 +150,6 @@ function AppCardImpl({
     target: openIn === "newTab" ? ("_blank" as const) : undefined,
     rel: "noopener",
     onClick: (event: MouseEvent) => void onLinkClick(event),
-    onMouseEnter: () => {
-      // Prefetch de la app al pasar el cursor (solo enlaces http).
-      if (app.url.startsWith("http")) {
-        const link = document.createElement("link");
-        link.rel = "prefetch";
-        link.href = app.url;
-        document.head.appendChild(link);
-        setTimeout(() => link.remove(), 10_000);
-      }
-    },
   };
 
   return (

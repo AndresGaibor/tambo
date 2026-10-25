@@ -85,8 +85,11 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(
           async () =>
-            (await caches.match(event.request)) ??
+            // El shell construido tiene prioridad offline: sus assets están
+            // cacheados y funcionan sin servidor. El HTML de desarrollo
+            // (cacheado en CACHE) puede referenciar módulos no disponibles.
             (await caches.match(SHELL_URL, { cacheName: SHELL_CACHE })) ??
+            (await caches.match(event.request)) ??
             Response.error(),
         ),
     );
