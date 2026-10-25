@@ -72,18 +72,13 @@ bun run icons      # regenera los PNG de la PWA (sharp)
   usa los valores por omisión.
 - **Identidad de una app** (igual en anclados y tarjetas): el icono es
   independiente de la portada. Icono: `brand:<archivo>.svg` (logo oficial
-  con su color propio, p. ej. el coral de Storybook),
-  `tambo:<glifo>` del sprite incluido, `lucide:<nombre>` o emoji.
-  Portada (jerarquía): captura real (`shot`) → recurso propio
+  con su color propio, p. ej. el coral de Storybook, tiene prioridad sobre
+  la portada), `tambo:<glifo>` del sprite incluido, `lucide:<nombre>` o
+  emoji. Portada (jerarquía): captura real (`shot`) → recurso propio
   (`svg`/`image` en `data/assets/`) → ilustración funcional del kit
-  (`data/assets/covers/`) → respaldo simple. No se descargan favicons.
-  `tambo:<glifo>` del sprite incluido en `app/src/assets/apps-sprite.svg`,
-  `lucide:<nombre>` o un emoji), y como respaldo la inicial. El icono y la
-  portada son propiedades independientes; una portada nunca resuelve el
-  icono compacto. No se descargan favicons: esa función no existe. El sprite
-  va incrustado en el documento (los `<use>` externos a archivo no siempre
-  renderizan) y el trazo se propaga por CSS porque los atributos de la raíz
-  del archivo no atraviesan el shadow tree de `<use>`.
+  (`data/assets/covers/`) → respaldo simple. No se descargan favicons. El
+  sprite va incrustado en el documento (los `<use>` externos a archivo no
+  siempre renderizan) y el trazo se propaga por CSS.
 - **Estados**: Activa, Sin respuesta (tras dos fallos consecutivos del
   servidor), Sin comprobar (sin chequeo aún) y el aviso global de datos
   desactualizados cuando falla la actualización de salud, que conserva los
@@ -114,8 +109,10 @@ Una app puede declarar su unidad systemd **de usuario** en `apps.json`:
 "service": "elcaliz-dev.service"
 ```
 
-Con eso la tarjeta muestra un botón de encendido y el menú contextual gana
-«Encender» o «Apagar». Reglas de seguridad: la unidad siempre sale de
+Con eso, al hacer clic en una app dormida se despierta automáticamente
+(Sablier) y se abre una página intermedia que redirige cuando está lista.
+El menú contextual y el drawer de detalles permiten encender/apagar
+manualmente. Reglas de seguridad: la unidad siempre sale de
 `apps.json` (nunca de la petición), las acciones exigen `X-Tambo: 1` y `Origin`
 del portal, y se ejecutan con `systemctl --user` contra el bus de la sesión
 del propietario. Varias apps pueden compartir una unidad (El Cáliz entera es
@@ -131,6 +128,24 @@ no tiene CPU hasta que exista un delta.
 En el despliegue con Docker esto necesita acceso al bus de systemd: montar
 `/run/user/1000/bus` y exportar `DBUS_SESSION_BUS_ADDRESS`. Quedó pendiente
 para cuando llegue el contenedor; hoy funciona con la unidad `tambo-dev`.
+
+## Escala a cero con Sablier
+
+Las apps que declaran `service` pueden marcarse con `[X-Sablier]` en su
+unidad systemd. El portal se integra con Sablier (API en `:10001`) para:
+
+- **Auto-encendido**: al hacer clic en una app dormida, el portal pide a
+  Sablier que la despierte y abra una sesión (30 min por defecto,
+  configurable por app con `sessionMinutes`).
+- **Escala a cero**: tras la sesión sin tráfico, Sablier detiene la instancia.
+- **UI**: chip "En sesión / Dormida" en tarjetas, cuenta regresiva, barra de
+  progreso en el drawer, resumen de RAM liberada en el panel servidor.
+- **Página intermedia**: `/wake.html` muestra "Despertando…" y redirige
+  cuando el health check pasa.
+
+Sablier se ejecuta como servicio de usuario (`sablier-systemd.service`) con
+`--provider.auto-warm-externally-started` para no matar unidades arrancadas
+desde el portal.
 
 ## DNS y red (pendiente de crear los registros)
 
@@ -167,12 +182,12 @@ en 443 para que el websocket del HMR atraviese el proxy.
 
 | App | Local | Host limpio |
 | --- | --- | --- |
-| ERP El Cáliz | 127.0.0.1:15173 | erp.elcaliz.lab.andresgaibor.com |
-| Admin El Cáliz | 127.0.0.1:15174 | admin.elcaliz.lab.andresgaibor.com |
-| API El Cáliz (`/salud`) | 127.0.0.1:18787 | api.elcaliz.lab.andresgaibor.com |
-| Storybook (web) | 127.0.0.1:6006 | sb.elcaliz.lab.andresgaibor.com |
-| Asistente | 127.0.0.1:5174 | asistente.elcaliz.lab.andresgaibor.com |
-| Delegation Monitor | 127.0.0.1:5173 | dmon.lab.andresgaibor.com |
+| ERP El Cáliz | 127.0.0.1:15173 | oracle.tail4a8b59.ts.net:15176 |
+| Admin El Cáliz | 127.0.0.1:15174 | oracle.tail4a8b59.ts.net:15175 |
+| API El Cáliz (`/salud`) | 127.0.0.1:18787 | oracle.tail4a8b59.ts.net:18788/salud |
+| Storybook (web) | 127.0.0.1:6007 | oracle.tail4a8b59.ts.net:6006 |
+| Asistente | 127.0.0.1:5174 | oracle.tail4a8b59.ts.net:5176 |
+| Delegation Monitor | 127.0.0.1:5173 | oracle.tail4a8b59.ts.net:3301 |
 | Titula (prod) | via Traefik | titula.andresgaibor.com |
 
 ## Estado de las fases
@@ -180,8 +195,8 @@ en 443 para que el websocket del HMR atraviese el proxy.
 - Fase 1 (MVP): completa. Falta la verificación desde el Mac, que requiere los
   registros DNS y el despliegue.
 - Fase 2 (edición): `PUT /api/config`, evento HMR al cambiar el archivo, modo
-  edición con arrastre (`@dnd-kit`), alta y baja, subida de portadas. Importar
-  y exportar quedan pendientes.
+  edición con arrastre (`@dnd-kit`), alta y baja, subida de portadas,
+  importar y exportar (`ConfigIO`).
 - Fase 3 (capturas con Playwright): pendiente; el servicio `shots` está
   esbozado como comentario en `compose.yaml`.
 
