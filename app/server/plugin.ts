@@ -3,7 +3,6 @@ import { stat } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin, ViteDevServer } from "vite-plus";
-import type { TamboConfig } from "../src/schema";
 import { ConfigStore } from "./config-store";
 import {
   MAX_ASSET_BYTES,
@@ -21,6 +20,9 @@ import {
 } from "./handlers";
 import { HealthService } from "./health";
 import { runServiceAction, servicesSnapshot, unitFor } from "./services";
+import { StatsKeeper, type MachineStats } from "./stats";
+import type { ServiceEntry } from "./services";
+import type { TamboConfig } from "../src/schema";
 
 function send(res: ServerResponse, api: ApiResponse): void {
   const headers = { "Content-Type": "application/json; charset=utf-8", ...api.headers };
@@ -67,6 +69,31 @@ export function tamboPlugin(): Plugin {
       };
 
       const health = new HealthService({ getConfig: () => latest });
+      const stats = new StatsKeeper();
+      // Estado de unidades + recursos: la lectura de cgroups comparte el
+      // systemctl que ya resuelve ActiveState y ControlGroup por unidad.
+      const snapshotWithStats = async (
+        config: TamboConfig | null,
+      ): Promise<{ services: Record<string, ServiceEntry>; machine: MachineStats | null }> => {
+        const { services } = await servicesSnapshot(config);
+        const cgroups = [
+          ...new Set(
+            Object.values(services)
+              .map((entry) => entry.cgroup)
+              .filter((cgroup): cgroup is string => !!cgroup),
+          ),
+        ];
+        const usage = await stats.usage(cgroups);
+        for (const entry of Object.values(services)) {
+          if (!entry.cgroup) continue;
+          const sample = usage.get(entry.cgroup);
+          if (sample) {
+            entry.memoryBytes = sample.memoryBytes;
+            entry.cpuPercent = sample.cpuPercent;
+          }
+        }
+        return { services, machine: await stats.machine() };
+      };
       // Primer chequeo inmediato al arrancar; luego, cada healthIntervalSec.
       void reload().then(() => {
         health.start();
@@ -204,7 +231,7 @@ export function tamboPlugin(): Plugin {
               res,
               await getServices({
                 getConfig: () => latest,
-                snapshot: servicesSnapshot,
+                snapshot: snapshotWithStats,
               }),
             );
             return;

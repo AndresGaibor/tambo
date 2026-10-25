@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { HealthEntry } from "../server/health";
 import type { ServiceEntry } from "../server/services";
+import type { MachineStats } from "../server/stats";
 import type { TamboConfig } from "./schema";
 
 export type ThemeMode = "dark" | "light" | "system";
@@ -41,6 +42,7 @@ type TamboState = {
   etag: string | null;
   health: Record<string, HealthEntry>;
   services: Record<string, ServiceEntry>;
+  machine: MachineStats | null;
   online: boolean;
   loadError: string | null;
   saveError: string | null;
@@ -74,6 +76,7 @@ export const useStore = create<TamboState>((set, get) => ({
   etag: null,
   health: {},
   services: {},
+  machine: null,
   online: true,
   loadError: null,
   saveError: null,
@@ -128,8 +131,11 @@ export const useStore = create<TamboState>((set, get) => ({
     try {
       const response = await fetch("/api/services");
       if (!response.ok) return;
-      const body = (await response.json()) as { services: Record<string, ServiceEntry> };
-      set({ services: body.services, online: true });
+      const body = (await response.json()) as {
+        services: Record<string, ServiceEntry>;
+        machine: MachineStats | null;
+      };
+      set({ services: body.services, machine: body.machine, online: true });
     } catch {
       set({ online: false });
     }

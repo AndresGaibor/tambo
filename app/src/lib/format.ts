@@ -47,6 +47,20 @@ export function initialOf(name: string): string {
   return (first ?? "?").toUpperCase();
 }
 
+/** 3313725440 -> "3.1 GB"; 314572800 -> "300 MB" */
+export function fmtBytes(bytes: number): string {
+  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+  if (bytes >= 1024 ** 2) return `${Math.round(bytes / 1024 ** 2)} MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${bytes} B`;
+}
+
+/** Porcentaje de CPU legible; sin dato aún, guion. */
+export function fmtCpu(percent: number | null | undefined): string {
+  if (percent == null || Number.isNaN(percent)) return "—";
+  return String(percent < 10 ? Math.round(percent * 10) / 10 : Math.round(percent));
+}
+
 /** Abre una app según settings.openIn. Cmd o Ctrl con clic abre pestaña nueva. */
 export function openApp(app: AppEntry, openIn: Settings["openIn"]): void {
   if (openIn === "sameWindow") {

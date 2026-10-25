@@ -5,7 +5,13 @@ import type { TamboConfig } from "../src/schema";
 const run = promisify(execFile);
 
 export type ServiceAction = "start" | "stop";
-export type ServiceEntry = { unit: string; state: string };
+export type ServiceEntry = {
+  unit: string;
+  state: string;
+  cgroup?: string;
+  memoryBytes?: number | null;
+  cpuPercent?: number | null;
+};
 
 /** Ejecuta systemctl --user contra el bus de la sesión del propietario. */
 export async function systemctlUser(args: string[]): Promise<string> {
@@ -30,12 +36,18 @@ export function unitFor(config: TamboConfig | null, appId: string): string | nul
   return null;
 }
 
-async function unitState(unit: string): Promise<string> {
+async function unitInfo(unit: string): Promise<{ state: string; cgroup: string | null }> {
   try {
-    const out = await systemctlUser(["show", unit, "--property=ActiveState", "--value"]);
-    return out.trim() || "unknown";
+    const out = await systemctlUser([
+      "show",
+      unit,
+      "--property=ActiveState,ControlGroup",
+      "--value",
+    ]);
+    const [state = "unknown", cgroup = ""] = out.split("\n").map((line) => line.trim());
+    return { state: state || "unknown", cgroup: cgroup || null };
   } catch {
-    return "unknown";
+    return { state: "unknown", cgroup: null };
   }
 }
 
@@ -45,13 +57,17 @@ export async function servicesSnapshot(config: TamboConfig | null): Promise<{
 }> {
   const services: Record<string, ServiceEntry> = {};
   if (!config) return { services };
-  const cache = new Map<string, string>();
+  const cache = new Map<string, { state: string; cgroup: string | null }>();
   for (const group of config.groups) {
     for (const app of group.apps) {
       if (!app.service) continue;
-      const state = cache.get(app.service) ?? (await unitState(app.service));
-      cache.set(app.service, state);
-      services[app.id] = { unit: app.service, state };
+      const info = cache.get(app.service) ?? (await unitInfo(app.service));
+      cache.set(app.service, info);
+      services[app.id] = {
+        unit: app.service,
+        state: info.state,
+        ...(info.cgroup ? { cgroup: info.cgroup } : {}),
+      };
     }
   }
   return { services };
@@ -62,5 +78,5 @@ export async function runServiceAction(
   action: ServiceAction,
 ): Promise<{ state: string }> {
   await systemctlUser([action, unit]);
-  return { state: await unitState(unit) };
+  return { state: (await unitInfo(unit)).state };
 }

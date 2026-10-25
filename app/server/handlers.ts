@@ -195,11 +195,12 @@ export function writeAllowed(input: {
 export async function getServices(deps: {
   getConfig: () => import("../src/schema").TamboConfig | null;
   snapshot: (config: import("../src/schema").TamboConfig | null) => Promise<{
-    services: Record<string, { unit: string; state: string }>;
+    services: Record<string, import("./services").ServiceEntry>;
+    machine: import("./stats").MachineStats | null;
   }>;
 }): Promise<ApiResponse> {
-  const { services } = await deps.snapshot(deps.getConfig());
-  return { status: 200, body: { services }, headers: noCache };
+  const { services, machine } = await deps.snapshot(deps.getConfig());
+  return { status: 200, body: { services, machine }, headers: noCache };
 }
 
 /**

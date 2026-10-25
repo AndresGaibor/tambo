@@ -45,7 +45,7 @@ describe("getServices", () => {
             services[app.id] = { unit: app.service, state: "active" };
           }
         }
-        return { services };
+        return { services, machine: null };
       },
     });
     expect(response.status).toBe(200);

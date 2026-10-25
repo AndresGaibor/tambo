@@ -4,7 +4,7 @@ import { Logo } from "./Logo";
 import { useStore } from "../store";
 import { flattenApps } from "../schema";
 import { filterGroups, firstMatch } from "../lib/search";
-import { openApp } from "../lib/format";
+import { fmtBytes, fmtCpu, openApp } from "../lib/format";
 
 function SearchBar() {
   const query = useStore((s) => s.query);
@@ -86,12 +86,22 @@ function GlobalStatus() {
   const config = useStore((s) => s.config);
   const health = useStore((s) => s.health);
   const online = useStore((s) => s.online);
+  const machine = useStore((s) => s.machine);
   if (!config) return null;
   const total = flattenApps(config).length;
   const up = Object.values(health).filter((entry) => entry.status === "up").length;
   return (
     <>
       {!online && <span className="badge-offline">Sin conexión</span>}
+      {machine && (
+        <span
+          className="machine-status"
+          title={`VM: ${machine.cores} núcleos, carga ${machine.load1}. CPU y RAM del total de la máquina.`}
+        >
+          CPU {fmtCpu(machine.cpuPercent)}% · {fmtBytes(machine.memoryUsedBytes)}/
+          {fmtBytes(machine.memoryTotalBytes)}
+        </span>
+      )}
       <span className="global-status" title="Apps activas sobre el total">
         <strong>{up}</strong>
         <span className="global-status-long">/{total} activas</span>

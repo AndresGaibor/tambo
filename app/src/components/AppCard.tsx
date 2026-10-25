@@ -4,7 +4,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, MoreHorizontal, Power } from "lucide-react";
 import type { AppEntry, Group, GroupColor } from "../schema";
 import { useStore } from "../store";
-import { hostOf, statusText, statusVar } from "../lib/format";
+import { fmtBytes, fmtCpu, hostOf, statusText, statusVar } from "../lib/format";
 import { Cover } from "./Cover";
 
 export type MenuPoint = { x: number; y: number };
@@ -92,6 +92,14 @@ export function AppCard({
               {tag}
             </span>
           ))}
+          {service?.state === "active" && service.memoryBytes != null && (
+            <span
+              className="card-res"
+              title={`${app.service}: ${fmtBytes(service.memoryBytes)} de RAM, ${fmtCpu(service.cpuPercent)}% de CPU del total de la VM`}
+            >
+              {fmtBytes(service.memoryBytes)} · {fmtCpu(service.cpuPercent)}%
+            </span>
+          )}
           <span className="card-host">{hostOf(app.url)}</span>
         </div>
       </div>

@@ -57,12 +57,12 @@ pnpm icons      # regenera los PNG de la PWA (sharp)
 | `PUT /api/config` | Reemplaza `apps.json`; exige `If-Match`, `X-Tambo: 1` y `Origin` del portal. `412` si cambió, `422` si no valida, `.bak` antes de escribir |
 | `GET /api/health` | Mapa `{ appId: { status, code, ms, checkedAt } }` |
 | `POST /api/health/refresh` | Fuerza un chequeo inmediato |
-| `GET /api/services` | Estado de las unidades systemd declaradas, por app |
+| `GET /api/services` | Estado de las unidades systemd declaradas, por app, con RAM y CPU por cgroup y el resumen de la VM |
 | `POST /api/services/<appId>` | `{ "action": "start" \| "stop" }` sobre la unidad de esa app |
 | `GET /shots/<id>.webp`, `GET /assets/*` | Estáticos de `data/` con lista cerrada |
 | `POST /api/assets?name=slug.svg` | Sube SVG/PNG/WebP de hasta 2 MB (fase 2) |
 
-## Encendido y apagado desde el portal
+## Encendido, apagado y recursos desde el portal
 
 Una app puede declarar su unidad systemd **de usuario** en `apps.json`:
 
@@ -75,7 +75,14 @@ Con eso la tarjeta muestra un botón de encendido y el menú contextual gana
 `apps.json` (nunca de la petición), las acciones exigen `X-Tambo: 1` y `Origin`
 del portal, y se ejecutan con `systemctl --user` contra el bus de la sesión
 del propietario. Varias apps pueden compartir una unidad (El Cáliz entera es
-`elcaliz-dev.service`); el estado se consulta una vez por unidad.
+`elcaliz-dev.service`); el estado se consulta una sola vez por unidad.
+
+Además, para cada unidad activa el portal lee su **cgroup v2**: muestra en el
+pie de la tarjeta la RAM real (`memory.stat: anon`, todo el árbol de procesos
+de la unidad) y el CPU como porcentaje del total de la VM (delta de
+`cpu.stat` entre muestreos de 15 s), y en la cabecera el resumen de la
+máquina (CPU, RAM usada de la total, carga). El primer periodo tras arrancar
+no tiene CPU hasta que exista un delta.
 
 En el despliegue con Docker esto necesita acceso al bus de systemd: montar
 `/run/user/1000/bus` y exportar `DBUS_SESSION_BUS_ADDRESS`. Quedó pendiente
