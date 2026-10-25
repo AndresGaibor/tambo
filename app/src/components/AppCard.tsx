@@ -144,26 +144,25 @@ export function AppCard({
     >
       {view === "compact" ? (
         <a {...linkProps}>
-          <span className="compact-identity">
+          <span className="compact-head">
             <AppIdentity app={app} color={color} size={38} radius={10} />
-          </span>
-          <span className="compact-main">
             <span className="card-name">{app.name}</span>
-            {app.description && <span className="card-desc">{app.description}</span>}
-            <span className="compact-meta">
-              {env && (
-                <span className="chip" data-tag={env}>
-                  {env}
-                </span>
-              )}
-              <span className="status-inline" data-status={health?.status ?? "unknown"}>
-                <span
-                  className="dot"
-                  style={{ "--status": statusVar(health) } as CSSProperties}
-                  aria-hidden="true"
-                />
-                {word}
+          </span>
+          {app.description && <span className="card-desc">{app.description}</span>}
+          {/* Pie común alineado al fondo: la descripción nunca lo desplaza. */}
+          <span className="compact-foot">
+            {env && (
+              <span className="chip" data-tag={env}>
+                {env}
               </span>
+            )}
+            <span className="status-inline" data-status={health?.status ?? "unknown"}>
+              <span
+                className="dot"
+                style={{ "--status": statusVar(health) } as CSSProperties}
+                aria-hidden="true"
+              />
+              {word}
             </span>
           </span>
         </a>

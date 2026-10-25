@@ -65,6 +65,29 @@ await page.screenshot({ path: `${prefix}-details.png` });
 await page.keyboard.press("Escape");
 await page.waitForTimeout(300);
 
+// ===== Encabezado durante el scroll (ventana baja para forzar desplazamiento) =====
+await page.setViewportSize({ width: 1440, height: 700 });
+await page.evaluate(() => window.scrollTo(0, 500));
+await page.waitForTimeout(500);
+const scrollY = await page.evaluate(() => window.scrollY);
+console.log("scrollY:", scrollY);
+await page.screenshot({ path: `${prefix}-scroll-1440.png` });
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.setViewportSize({ width: 1440, height: 900 });
+await page.waitForTimeout(300);
+
+// ===== Menú de vista =====
+await page.evaluate(() => {
+  const btn = [...document.querySelectorAll("button")].find((b) =>
+    b.getAttribute("aria-label")?.startsWith("Vista:"),
+  );
+  btn?.click();
+});
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${prefix}-view-menu.png` });
+await page.keyboard.press("Escape");
+await page.waitForTimeout(200);
+
 // ===== Panel Servidor OCI =====
 await page.evaluate(() => {
   const btn = document.querySelector(".machine-btn");

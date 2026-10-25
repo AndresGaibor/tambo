@@ -72,20 +72,30 @@ pnpm icons      # regenera los PNG de la PWA (sharp)
   usa los valores por omisión.
 - **Identidad de una app** (igual en anclados y tarjetas): primero el recurso
   propio (`cover` svg/image), luego el icono configurado (`icon`:
-  `lucide:<nombre>` o emoji), y como respaldo la inicial. No se descargan
-  favicons: esa función no existe.
+  `tambo:<glifo>` del sprite incluido en `app/src/assets/apps-sprite.svg`,
+  `lucide:<nombre>` o un emoji), y como respaldo la inicial. El icono y la
+  portada son propiedades independientes; una portada nunca resuelve el
+  icono compacto. No se descargan favicons: esa función no existe. El sprite
+  va incrustado en el documento (los `<use>` externos a archivo no siempre
+  renderizan) y el trazo se propaga por CSS porque los atributos de la raíz
+  del archivo no atraviesan el shadow tree de `<use>`.
 - **Estados**: Activa, Sin respuesta (tras dos fallos consecutivos del
   servidor), Sin comprobar (sin chequeo aún) y el aviso global de datos
   desactualizados cuando falla la actualización de salud, que conserva los
   últimos valores y ofrece Reintentar.
-- **Recursos**: el porcentaje de CPU es del total de la VM (todos sus
-  núcleos), promediado entre muestreos de 15 s; la RAM es la memoria anónima
-  del cgroup de la unidad. Cuando una unidad sirve a varias apps (El Cáliz
-  comparte `elcaliz-dev.service`), sus contadores son del conjunto y no se
-  atribuyen a cada app: en Detalles se muestra "No disponible por app" con la
-  explicación, y el total de la máquina vive en el control "Servidor OCI" del
-  encabezado. El origen de las cifras es siempre el host de la VM, nunca el
-  MacBook.
+- **Recursos**: el control del encabezado se llama "Servidor OCI" y no
+  muestra cifras: el panel despliega CPU (% del total de la VM y sus
+  núcleos), RAM usada/total, carga, el origen (cgroups del host de la VM,
+  nunca el MacBook) y la hora de la última lectura. Cuando una unidad sirve
+  a varias apps (El Cáliz comparte `elcaliz-dev.service`), sus contadores son
+  del conjunto y no se atribuyen a cada app: en Detalles se muestra "No
+  disponible por app" con la explicación.
+- **Densidad**: tarjetas compactas de 132 px de altura base (crecen con el
+  contenido), pie común con entorno y estado anclado al fondo, hasta cinco
+  columnas en ventanas anchas, 16 px entre título y cuadrícula y 28 px entre
+  secciones. `prod` y `dev` comparten estructura de chip; el verde queda
+  reservado a la salud. El encabezado tiene fondo opaco (verificado con
+  scroll real) y contraste AA medido por cálculo en ambos temas.
 - **Atajos**: `/` y Cmd+K (Ctrl K fuera de macOS) enfocan la búsqueda;
   Escape cierra primero el menú o panel superior y después limpia la
   búsqueda; `e`, `t` y `1-9` son conmutables y no actúan nunca mientras se

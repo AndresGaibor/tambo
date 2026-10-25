@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LayoutGrid, Monitor, Moon, Pencil, Rows3, Search, Server, Sun, X } from "lucide-react";
+import {
+  ChevronDown,
+  LayoutGrid,
+  Monitor,
+  Moon,
+  Pencil,
+  Rows3,
+  Search,
+  Server,
+  Sun,
+  X,
+} from "lucide-react";
 import { Logo } from "./Logo";
-import { useStore } from "../store";
+import { useStore, type ViewMode } from "../store";
 import { flattenApps } from "../schema";
 import { filterGroups, firstMatch } from "../lib/search";
 import { agoOf, clockOf, fmtBytes, fmtCpu, openApp } from "../lib/format";
@@ -68,7 +79,7 @@ function ThemeButton() {
       type="button"
       className="btn btn-ghost theme-btn"
       onClick={() => setTheme(theme === "system" ? "light" : theme === "light" ? "dark" : "system")}
-      aria-label={`Tema: ${label}. Cambiar`}
+      aria-label={`Tema: ${label}. Activar cambia al siguiente tema`}
       title={`Tema: ${label}`}
     >
       {theme === "system" ? (
@@ -78,7 +89,7 @@ function ThemeButton() {
       ) : (
         <Sun size={16} strokeWidth={1.75} />
       )}
-      <span className="btn-text">{label}</span>
+      <span className="btn-text">Tema: {label}</span>
     </button>
   );
 }
@@ -86,21 +97,93 @@ function ThemeButton() {
 function ViewButton() {
   const view = useStore((s) => s.view);
   const setView = useStore((s) => s.setView);
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLButtonElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (event: MouseEvent) => {
+      if (
+        !ref.current?.contains(event.target as Node) &&
+        !anchorRef.current?.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.isComposing) {
+        setOpen(false);
+        anchorRef.current?.focus();
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const pick = (mode: ViewMode) => {
+    setView(mode);
+    setOpen(false);
+    anchorRef.current?.focus();
+  };
+
   return (
-    <button
-      type="button"
-      className="btn btn-ghost theme-btn"
-      onClick={() => setView(view === "compact" ? "covers" : "compact")}
-      aria-label={`Vista: ${view === "compact" ? "Compacta" : "Portadas"}. Cambiar`}
-      title={view === "compact" ? "Cambiar a Portadas" : "Cambiar a Compacta"}
-    >
-      {view === "compact" ? (
-        <LayoutGrid size={16} strokeWidth={1.75} />
-      ) : (
-        <Rows3 size={16} strokeWidth={1.75} />
+    <>
+      <button
+        type="button"
+        className="btn btn-ghost theme-btn"
+        ref={anchorRef}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={`Vista: ${view === "compact" ? "Compacta" : "Portadas"}. Cambiar`}
+        title="Cambiar la vista de las tarjetas"
+        onClick={() => setOpen((value) => !value)}
+      >
+        {view === "compact" ? (
+          <LayoutGrid size={16} strokeWidth={1.75} />
+        ) : (
+          <Rows3 size={16} strokeWidth={1.75} />
+        )}
+        <span className="btn-text">Vista</span>
+        <ChevronDown size={14} strokeWidth={1.75} className="chevron" />
+      </button>
+      {open && (
+        <div className="menu view-pop" role="menu" aria-label="Vista" ref={ref}>
+          <button
+            type="button"
+            className="menu-item"
+            role="menuitemradio"
+            aria-checked={view === "compact"}
+            onClick={() => pick("compact")}
+          >
+            <LayoutGrid size={15} strokeWidth={1.75} /> Compacta
+            {view === "compact" && (
+              <span className="view-check" aria-hidden="true">
+                ✓
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            className="menu-item"
+            role="menuitemradio"
+            aria-checked={view === "covers"}
+            onClick={() => pick("covers")}
+          >
+            <Rows3 size={15} strokeWidth={1.75} /> Portadas
+            {view === "covers" && (
+              <span className="view-check" aria-hidden="true">
+                ✓
+              </span>
+            )}
+          </button>
+        </div>
       )}
-      <span className="btn-text">{view === "compact" ? "Compacta" : "Portadas"}</span>
-    </button>
+    </>
   );
 }
 
@@ -179,7 +262,6 @@ function MachinePanel({
 }
 
 function MachineButton() {
-  const machine = useStore((s) => s.machine);
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLButtonElement>(null);
   return (
@@ -194,11 +276,7 @@ function MachineButton() {
         title="Recursos del servidor OCI"
       >
         <Server size={16} strokeWidth={1.75} />
-        <span className="btn-text">
-          {machine
-            ? `CPU ${fmtCpu(machine.cpuPercent)}% · ${fmtBytes(machine.memoryUsedBytes)}`
-            : "Servidor OCI"}
-        </span>
+        <span className="btn-text">Servidor OCI</span>
       </button>
       {open && <MachinePanel onClose={() => setOpen(false)} anchorRef={anchorRef} />}
     </>

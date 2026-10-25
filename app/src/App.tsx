@@ -14,6 +14,7 @@ import { ErrorBanner } from "./components/ErrorBanner";
 import { EmptyState } from "./components/EmptyState";
 import { AppMenu } from "./components/AppMenu";
 import { Logo } from "./components/Logo";
+import { AppIconSprite } from "./components/AppIdentity";
 import type { MenuPoint } from "./components/AppCard";
 
 export default function App() {
@@ -138,6 +139,7 @@ export default function App() {
 
   return (
     <>
+      <AppIconSprite />
       <Header />
       <ErrorBanner />
       <main className="main" data-view={view}>

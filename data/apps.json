@@ -13,9 +13,46 @@
       "icon": "lucide:leaf",
       "apps": [
         {
+          "id": "elcaliz-storybook",
+          "name": "Storybook",
+          "description": "Catálogo de componentes y vistas del ERP",
+          "url": "https://sb.elcaliz.lab.andresgaibor.com",
+          "tags": [
+            "dev"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "shot"
+          },
+          "health": {
+            "url": "http://127.0.0.1:6006"
+          },
+          "service": "elcaliz-storybook.service",
+          "icon": "tambo:storybook"
+        },
+        {
+          "id": "elcaliz-admin",
+          "name": "Admin de plataforma",
+          "description": "Organizaciones, suscripciones, accesos y cobros",
+          "url": "https://admin.elcaliz.lab.andresgaibor.com",
+          "tags": [
+            "dev"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "emoji",
+            "value": "🛠️"
+          },
+          "health": {
+            "url": "http://127.0.0.1:15174"
+          },
+          "service": "elcaliz-dev.service",
+          "icon": "tambo:admin"
+        },
+        {
           "id": "elcaliz-erp",
-          "name": "ERP",
-          "description": "Aplicación web del ERP",
+          "name": "ERP contable",
+          "description": "Ventas, POS, inventario y facturación",
           "url": "https://erp.elcaliz.lab.andresgaibor.com",
           "tags": [
             "dev"
@@ -27,69 +64,44 @@
           "health": {
             "url": "http://127.0.0.1:15173"
           },
-          "service": "elcaliz-dev.service"
-        },
-        {
-          "id": "elcaliz-admin",
-          "name": "Admin de la plataforma",
-          "url": "https://admin.elcaliz.lab.andresgaibor.com",
-          "tags": [
-            "dev"
-          ],
-          "cover": {
-            "kind": "emoji",
-            "value": "🛠️"
-          },
-          "health": {
-            "url": "http://127.0.0.1:15174"
-          },
-          "service": "elcaliz-dev.service"
+          "service": "elcaliz-dev.service",
+          "icon": "tambo:erp"
         },
         {
           "id": "elcaliz-api",
           "name": "API del ERP",
-          "description": "API del ERP con ruta de salud en /salud",
+          "description": "Backend Hono y PostgreSQL; salud en /salud",
           "url": "https://api.elcaliz.lab.andresgaibor.com",
           "tags": [
             "dev"
           ],
+          "pinned": false,
           "cover": {
             "kind": "auto"
           },
           "health": {
             "url": "http://127.0.0.1:18787/salud"
           },
-          "service": "elcaliz-dev.service"
-        },
-        {
-          "id": "elcaliz-storybook",
-          "name": "Storybook",
-          "url": "https://sb.elcaliz.lab.andresgaibor.com",
-          "tags": [
-            "dev"
-          ],
-          "cover": {
-            "kind": "shot"
-          },
-          "health": {
-            "url": "http://127.0.0.1:6006"
-          },
-          "service": "elcaliz-storybook.service"
+          "service": "elcaliz-dev.service",
+          "icon": "tambo:api"
         },
         {
           "id": "elcaliz-asistente",
-          "name": "Asistente",
+          "name": "Asistente móvil",
+          "description": "Chat del ERP para móvil, con cliente MCP",
           "url": "https://asistente.elcaliz.lab.andresgaibor.com",
           "tags": [
             "dev"
           ],
+          "pinned": false,
           "cover": {
             "kind": "auto"
           },
           "health": {
             "url": "http://127.0.0.1:5174"
           },
-          "service": "elcaliz-dev.service"
+          "service": "elcaliz-dev.service",
+          "icon": "tambo:assistant"
         }
       ]
     },
@@ -100,8 +112,8 @@
       "apps": [
         {
           "id": "delegation-monitor",
-          "name": "Delegation Monitor",
-          "description": "Dashboard de sesiones de agentes",
+          "name": "Monitor de delegaciones",
+          "description": "Sesiones de agentes: latencia, tokens, errores y delegaciones",
           "url": "https://dmon.lab.andresgaibor.com",
           "tags": [
             "dev",
@@ -114,21 +126,107 @@
           "health": {
             "url": "http://127.0.0.1:5173"
           },
-          "service": "delegation-monitor-dev.service"
+          "service": "delegation-monitor-dev.service",
+          "icon": "tambo:delegation"
         },
         {
           "id": "titula",
           "name": "Titula",
+          "description": "Estado y validación de la documentación académica",
           "url": "https://titula.andresgaibor.com",
           "tags": [
             "prod"
           ],
+          "pinned": false,
           "cover": {
             "kind": "auto"
           },
           "health": {
             "url": "https://titula.andresgaibor.com"
-          }
+          },
+          "icon": "tambo:titula"
+        }
+      ]
+    },
+    {
+      "id": "facturador",
+      "name": "Facturador",
+      "color": "indigo",
+      "icon": "lucide:receipt",
+      "apps": [
+        {
+          "id": "facturador-portal",
+          "name": "Portal de facturación",
+          "description": "Emitir comprobantes SRI, clientes, estados y RIDE",
+          "url": "https://oracle.tail4a8b59.ts.net:8091/portal",
+          "tags": [
+            "local",
+            "sri"
+          ],
+          "pinned": true,
+          "cover": {
+            "kind": "auto"
+          },
+          "health": {
+            "url": "http://127.0.0.1:8090/healthz"
+          },
+          "icon": "tambo:billing"
+        },
+        {
+          "id": "facturador-inicio",
+          "name": "Presentación",
+          "description": "Portada de presentación del facturador",
+          "url": "https://oracle.tail4a8b59.ts.net:8091/",
+          "tags": [
+            "local"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "emoji",
+            "value": "🧾"
+          },
+          "health": {
+            "url": "http://127.0.0.1:8090/healthz"
+          },
+          "icon": "tambo:presentation"
+        },
+        {
+          "id": "facturador-docs",
+          "name": "Documentación",
+          "description": "Gateway fiscal y API /api/v1: firma, SRI y RIDE",
+          "url": "https://oracle.tail4a8b59.ts.net:8091/docs/introduccion",
+          "tags": [
+            "local",
+            "docs"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "emoji",
+            "value": "📘"
+          },
+          "health": {
+            "url": "http://127.0.0.1:8090/healthz"
+          },
+          "icon": "tambo:api-docs"
+        },
+        {
+          "id": "facturador-api",
+          "name": "API para ERP (OpenAPI)",
+          "description": "Contrato OpenAPI con JWT para integraciones",
+          "url": "https://oracle.tail4a8b59.ts.net:8091/openapi.json",
+          "tags": [
+            "local",
+            "erp"
+          ],
+          "pinned": false,
+          "cover": {
+            "kind": "emoji",
+            "value": "🔌"
+          },
+          "health": {
+            "url": "http://127.0.0.1:8090/readyz"
+          },
+          "icon": "tambo:openapi"
         }
       ]
     }
