@@ -1,29 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" role="img">
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#161A23"/><stop offset="1" stop-color="#0F1218"/></linearGradient>
-<radialGradient id="g-F5B83D" cx="0.72" cy="0.9" r="0.85"><stop offset="0" stop-color="#F5B83D" stop-opacity="0.16"/><stop offset="0.55" stop-color="#F5B83D" stop-opacity="0.05"/><stop offset="1" stop-color="#F5B83D" stop-opacity="0"/></radialGradient>
+<radialGradient id="g-699ECA" cx="0.72" cy="0.9" r="0.85"><stop offset="0" stop-color="#699ECA" stop-opacity="0.16"/><stop offset="0.55" stop-color="#699ECA" stop-opacity="0.05"/><stop offset="1" stop-color="#699ECA" stop-opacity="0"/></radialGradient>
 </defs>
 <rect width="720" height="240" fill="url(#bg)"/>
-<rect width="720" height="240" fill="url(#g-F5B83D)"/>
+<rect width="720" height="240" fill="url(#g-699ECA)"/>
 <path d="M60 194 H 660" stroke="#4A5164" stroke-opacity="0.55" stroke-width="1.5" stroke-linecap="round"/>
-<g fill="none" stroke="#F5B83D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-<g fill="none" stroke="#F5B83D" stroke-width="3" stroke-opacity="1.0" stroke-linecap="round" stroke-linejoin="round">
-<rect x="330" y="76" width="140" height="88" rx="14"/>
-<path d="M 386 100 L 370 120 L 386 140"/>
-<path d="M 414 100 L 430 120 L 414 140"/>
-<line x1="404" y1="96" x2="396" y2="144"/>
-<rect x="330" y="76" width="140" height="88" rx="14" fill="#F5B83D" fill-opacity="0.07"/>
-<line x1="238" y1="120" x2="296" y2="120"/>
-<circle cx="238" cy="120" r="8"/>
-<line x1="296" y1="120" x2="330" y2="120"/>
-<line x1="470" y1="120" x2="528" y2="120"/>
-<circle cx="540" cy="120" r="8"/>
-<path d="M 500 120 Q 514 120 514 106"/>
-<rect x="214" y="96" width="24" height="24" rx="6"/>
-<rect x="196" y="132" width="18" height="18" rx="5"/>
-<rect x="566" y="96" width="22" height="22" rx="6"/>
-<rect x="590" y="128" width="16" height="16" rx="5"/>
+<g fill="none" stroke="#699ECA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<g fill="none" stroke="#699ECA" stroke-width="3" stroke-opacity="1.0" stroke-linecap="round" stroke-linejoin="round">
+<path d="M 330 88 Q 330 102 360 102 L 470 102 Q 500 102 500 88"/>
+<path d="M 330 88 Q 330 74 360 74 L 470 74 Q 500 74 500 88"/>
+<path d="M 330 118 Q 330 132 360 132 L 470 132 Q 500 132 500 118"/>
+<path d="M 330 118 Q 330 104 360 104 L 470 104 Q 500 104 500 118"/>
+<path d="M 330 148 Q 330 162 360 162 L 470 162 Q 500 162 500 148"/>
+<path d="M 330 148 Q 330 134 360 134 L 470 134 Q 500 134 500 148"/>
+<ellipse cx="400" cy="74" rx="85" ry="14" fill="#699ECA" fill-opacity="0.12"/>
+<line x1="244" y1="118" x2="296" y2="118"/>
+<circle cx="244" cy="118" r="8"/>
+<path d="M 296 118 L 316 118 Q 326 118 326 108"/>
+<line x1="500" y1="118" x2="552" y2="118"/>
+<circle cx="564" cy="118" r="8"/>
+<rect x="216" y="92" width="24" height="24" rx="6"/>
+<rect x="198" y="130" width="18" height="18" rx="5"/>
+<rect x="588" y="96" width="22" height="22" rx="6"/>
+<rect x="612" y="128" width="16" height="16" rx="5"/>
 </g>
 </g>
-<path d="M 584 66 Q 584 74 592 74 Q 584 74 584 82 Q 584 74 576 74 Q 584 74 584 66" fill="#2DD4BF" fill-opacity="0.85" stroke="none"/>
+<path d="M 584 66 Q 584 74 592 74 Q 584 74 584 82 Q 584 74 576 74 Q 584 74 584 66" fill="#F5B83D" fill-opacity="0.85" stroke="none"/>
 </svg>

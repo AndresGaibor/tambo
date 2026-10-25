@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" role="img">
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#161A23"/><stop offset="1" stop-color="#0F1218"/></linearGradient>
-<radialGradient id="g-F5B83D" cx="0.72" cy="0.9" r="0.85"><stop offset="0" stop-color="#F5B83D" stop-opacity="0.16"/><stop offset="0.55" stop-color="#F5B83D" stop-opacity="0.05"/><stop offset="1" stop-color="#F5B83D" stop-opacity="0"/></radialGradient>
+<radialGradient id="g-6C47FF" cx="0.72" cy="0.9" r="0.85"><stop offset="0" stop-color="#6C47FF" stop-opacity="0.16"/><stop offset="0.55" stop-color="#6C47FF" stop-opacity="0.05"/><stop offset="1" stop-color="#6C47FF" stop-opacity="0"/></radialGradient>
 </defs>
 <rect width="720" height="240" fill="url(#bg)"/>
-<rect width="720" height="240" fill="url(#g-F5B83D)"/>
+<rect width="720" height="240" fill="url(#g-6C47FF)"/>
 <path d="M60 194 H 660" stroke="#4A5164" stroke-opacity="0.55" stroke-width="1.5" stroke-linecap="round"/>
-<g fill="none" stroke="#F5B83D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-<g fill="none" stroke="#F5B83D" stroke-width="3" stroke-opacity="1.0" stroke-linecap="round" stroke-linejoin="round">
+<g fill="none" stroke="#6C47FF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<g fill="none" stroke="#6C47FF" stroke-width="3" stroke-opacity="1.0" stroke-linecap="round" stroke-linejoin="round">
 <path d="M 340 66 L 400 84 L 400 128 Q 400 166 340 188 Q 280 166 280 128 L 280 84 Z"/>
 <path d="M 340 78 L 388 92 L 388 126 Q 388 156 340 176 Q 292 156 292 126 L 292 92 Z"/>
 <path d="M 340 78 L 388 92 L 388 126 Q 388 156 340 176 Q 292 156 292 126 L 292 92 Z" fill="#F5B83D" fill-opacity="0.08"/>
@@ -22,5 +22,5 @@
 <line x1="532" y1="138" x2="540" y2="130"/>
 </g>
 </g>
-<path d="M 262 70 Q 262 78 270 78 Q 262 78 262 86 Q 262 78 254 78 Q 262 78 262 70" fill="#2DD4BF" fill-opacity="0.85" stroke="none"/>
+<path d="M 262 70 Q 262 78 270 78 Q 262 78 262 86 Q 262 78 254 78 Q 262 78 262 70" fill="#F5B83D" fill-opacity="0.85" stroke="none"/>
 </svg>

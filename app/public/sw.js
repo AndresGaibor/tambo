@@ -1,14 +1,9 @@
-// Service worker mínimo de producción: shell y capturas con revalidación en
-// segundo plano. /api/* y las rutas del servidor de desarrollo pasan siempre
-// a la red; en desarrollo no se registra.
-const CACHE = "tambo-v1";
-const SHELL = [
-  "/",
-  "/manifest.webmanifest",
-  "/icon.svg",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-];
+// Service worker de producción: red-primero para la navegación (el shell
+// nunca queda viejo) y cache para recursos estáticos y capturas. /api/* y
+// las rutas del servidor de desarrollo pasan siempre a la red; en desarrollo
+// no se registra.
+const CACHE = "tambo-v2";
+const SHELL = ["/manifest.webmanifest", "/icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -33,19 +28,47 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.pathname.startsWith("/api/")) return;
-  const cacheable =
+  const sameOrigin = url.origin === self.location.origin;
+  if (!sameOrigin) return;
+
+  // Navegación y bundle: red primero, cache como respaldo sin conexión.
+  // Así una actualización del portal llega al siguiente arranque.
+  const networkFirst =
+    event.request.mode === "navigate" ||
     url.pathname === "/" ||
-    url.pathname === "/manifest.webmanifest" ||
+    /\.(js|mjs|css|webmanifest)$/.test(url.pathname);
+
+  if (networkFirst) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => void cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached ?? caches.match("/"))),
+    );
+    return;
+  }
+
+  // Imágenes y estáticos: cache con revalidación en segundo plano.
+  const cacheable =
     url.pathname === "/icon.svg" ||
+    url.pathname.startsWith("/icons/") ||
     url.pathname.startsWith("/shots/") ||
-    url.pathname.startsWith("/icons/");
+    url.pathname.startsWith("/assets/");
   if (!cacheable) return;
   event.respondWith(
     caches.open(CACHE).then(async (cache) => {
       const cached = await cache.match(event.request);
       const network = fetch(event.request)
         .then((response) => {
-          if (response.ok) void cache.put(event.request, response.clone());
+          if (response.ok) {
+            const copy = response.clone();
+            void cache.put(event.request, copy);
+          }
           return response;
         })
         .catch(() => cached);
